@@ -1,0 +1,103 @@
+:root {
+  --bg: #1c2b36;
+  --panel: #27394640;
+  --panel-solid: #273946;
+  --asphalt: #3a424a;
+  --sky: #8fbfcf;
+  --ink: #eef2f4;
+  --muted: #9fb3bf;
+  --amber: #f2a93b;
+  --ok: #5fc58f;
+  --bad: #e5604d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Tajawal", system-ui, sans-serif;
+  line-height: 1.6;
+  display: grid;
+  place-items: start center;
+}
+.game { width: min(100%, 560px); padding: 16px; display: grid; gap: 14px; }
+
+.hud { display: flex; justify-content: space-between; align-items: center; }
+.hud h1 { font: 2.2rem/1 "Lalezar", sans-serif; margin: 0; color: var(--amber); }
+.hud dl { display: flex; gap: 18px; margin: 0; }
+.hud dt { font-size: .8rem; color: var(--muted); }
+.hud dd { margin: 0; font-size: 1.25rem; font-weight: 700; min-width: 2ch; }
+
+.road {
+  position: relative; height: 130px; border-radius: 14px; overflow: hidden;
+  background:
+    linear-gradient(var(--sky) 0 38%, transparent 38%),
+    repeating-linear-gradient(90deg, #fff 0 36px, transparent 36px 84px) 0 82% / 100% 4px no-repeat,
+    var(--asphalt);
+}
+.road.driving { animation: lane .5s linear infinite; }
+@keyframes lane { to { background-position: 84px 82%, 84px 82%, 0 0; } }
+.bus { position: absolute; bottom: 20px; inset-inline-start: 50%; font-size: 4rem; transform: translateX(50%); line-height: 1; }
+.road.driving .bus { animation: bump .35s ease-in-out infinite alternate; }
+@keyframes bump { to { transform: translateX(50%) translateY(-3px); } }
+.sign { position: absolute; top: 34%; inset-inline-end: 12%; font-size: 2.2rem; transition: opacity .3s; }
+.road.driving .sign { opacity: 0; }
+
+.desk { background: var(--panel-solid); border-radius: 14px; padding: 16px; display: grid; gap: 12px; }
+.queue { display: flex; gap: 6px; min-height: 1.6rem; font-size: 1.3rem; }
+.queue span { opacity: .45; }
+.queue span:first-child { opacity: 1; }
+.passenger { display: flex; gap: 14px; align-items: center; }
+.face { font-size: 3rem; line-height: 1; }
+.say { margin: 0; color: var(--muted); }
+.bill { margin: 0; font-size: 1.25rem; font-weight: 700; }
+.patience { height: 8px; background: #0003; border-radius: 99px; overflow: hidden; }
+.patience i { display: block; height: 100%; width: 100%; background: var(--ok); transition: background .3s; transform-origin: right; }
+.patience.low i { background: var(--bad); }
+.hand { margin: 0; text-align: center; color: var(--muted); }
+.hand b { color: var(--ink); font-size: 1.6rem; }
+
+.notes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+button { font: inherit; cursor: pointer; border: 0; border-radius: 10px; color: var(--ink); }
+button:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+.notes button { padding: 14px 0; font-weight: 700; font-size: 1.1rem; background: #36505f; }
+.notes button:active { transform: scale(.95); }
+.actions { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
+.actions button, .card button { padding: 12px; font-weight: 700; font-size: 1.05rem; }
+.ghost { background: transparent; border: 1px solid #5d7686; }
+.primary { background: var(--amber); color: #1c2b36; }
+button:disabled { opacity: .4; cursor: default; }
+
+.toast { margin: 0; min-height: 1.6em; text-align: center; font-weight: 700; }
+.toast.ok { color: var(--ok); }
+.toast.bad { color: var(--bad); }
+.desk.shake { animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+footer { text-align: center; color: var(--muted); font-size: .85rem; }
+
+.overlay { position: fixed; inset: 0; display: grid; place-items: center; background: #0009; padding: 16px; }
+.overlay.hidden { display: none; }
+.card { background: var(--panel-solid); border-radius: 16px; padding: 24px; max-width: 420px; display: grid; gap: 12px; text-align: center; }
+.card h2 { margin: 0; font: 2rem/1.2 "Lalezar", sans-serif; color: var(--amber); }
+.card p { margin: 0; }
+.best { color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .road.driving, .road.driving .bus, .desk.shake { animation: none; }
+}
+
+/* ---- إضافات: بنزين، طلبات، لوحة الأحسن ---- */
+.hud dl { gap: 12px; }
+.hud dd { font-size: 1.1rem; }
+.hud .low dd { color: var(--bad); }
+.tools { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.tools button { padding: 8px 12px; font-size: .95rem; }
+.requests { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.requests button { padding: 10px 0; background: #4a4430; font-weight: 700; }
+.card h3 { margin: 4px 0; font-size: 1.1rem; color: var(--muted); }
+.card form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.card input { font: inherit; padding: 10px; border-radius: 10px; border: 1px solid #5d7686; background: #0003; color: var(--ink); }
+.card input:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+.board { margin: 0; padding-inline-start: 1.4em; text-align: start; display: grid; gap: 4px; }

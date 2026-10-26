@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Mohamed Hussain">
+  <title>الأسطى | لعبة الميكروباص - M11</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game">
+    <header class="hud">
+      <h1>الأسطى</h1>
+      <dl>
+        <div><dt>المحطة</dt><dd id="hudStop">1</dd></div>
+        <div><dt>الحساب</dt><dd id="hudScore">0</dd></div>
+        <div id="fuelBox"><dt>البنزين</dt><dd id="hudFuel">100%</dd></div>
+        <div><dt>الزعلانين</dt><dd id="hudLives" aria-live="polite"></dd></div>
+      </dl>
+    </header>
+
+    <div class="tools">
+      <button class="ghost" id="refuel" type="button">⛽ تموين (٣ جنيه لكل ١٠٪)</button>
+      <button class="ghost" id="mute" type="button" aria-label="كتم الصوت">🔊</button>
+    </div>
+
+    <section class="road" id="road" aria-label="الطريق">
+      <span class="sign" id="sign">🚏</span>
+      <span class="bus" id="bus">🚐</span>
+    </section>
+
+    <section class="desk" aria-live="polite">
+      <div class="queue" id="queue"></div>
+      <div class="passenger">
+        <span class="face" id="face">🧔</span>
+        <div>
+          <p class="say" id="say"></p>
+          <p class="bill" id="bill"></p>
+        </div>
+      </div>
+      <div class="patience"><i id="patience"></i></div>
+
+      <div class="requests" id="requests"></div>
+
+      <p class="hand">في إيدك: <b id="handSum">0</b> جنيه</p>
+      <div class="notes" id="notes"></div>
+      <div class="actions">
+        <button class="ghost" id="clear" type="button">امسح</button>
+        <button class="primary" id="give" type="button">ادّي الباقي</button>
+      </div>
+      <p class="toast" id="toast" role="status"></p>
+    </section>
+
+    <footer>تطوير Mr. Mohamed Hussain &middot; شركة M11</footer>
+  </main>
+
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <h2 id="ovTitle">يلا يا أسطى</h2>
+      <p id="ovText">الأجرة ٥ جنيه للفرد. رجّع الباقي بالظبط، ونفّذ طلبات الركاب، وخلّي عينك على البنزين. ٣ زعلانين والوردية تخلص.</p>
+      <form id="nameForm" hidden>
+        <input id="nameInput" maxlength="12" placeholder="اكتب اسمك" aria-label="اسمك">
+        <button class="primary" type="submit">سجّل</button>
+      </form>
+      <section id="boardBox" hidden>
+        <h3>أحسن الحسابات</h3>
+        <ol class="board" id="board"></ol>
+      </section>
+      <button class="primary" id="start" type="button">ابدأ الوردية</button>
+    </div>
+  </div>
+
+  <script src="audio.js"></script>
+  <script src="leaderboard.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
