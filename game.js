@@ -1300,5 +1300,948 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.m
       `;
     }
   }
+// ======================================================
+// M11 CITY BUILDER — EXPANSION PACK
+// Categories + New Buildings + Upgrades + City Expansion
+// Developer: M11 Development
+// ======================================================
 
+(() => {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+
+  // نتأكد أن أساسيات اللعبة موجودة.
+  if (
+    typeof THREE === "undefined" ||
+    typeof cityGroup === "undefined" ||
+    typeof objects === "undefined"
+  ) {
+    console.warn("M11 Expansion: game systems are not ready.");
+    return;
+  }
+
+  // ------------------------------------------------------
+  // 1. بيانات المباني الجديدة
+  // ------------------------------------------------------
+
+  const EXTRA_BUILDINGS = {
+    cafe: {
+      label: "مقهى",
+      icon: "☕",
+      category: "commerce",
+      cost: 1200,
+      population: 3,
+      income: 80,
+      color: "#bc8060",
+      height: 1.7
+    },
+
+    supermarket: {
+      label: "سوبر ماركت",
+      icon: "🛒",
+      category: "commerce",
+      cost: 2500,
+      population: 8,
+      income: 160,
+      color: "#75b9a0",
+      height: 2.1
+    },
+
+    bank: {
+      label: "بنك",
+      icon: "🏦",
+      category: "commerce",
+      cost: 6500,
+      population: 0,
+      income: 450,
+      color: "#d8bd75",
+      height: 3.2
+    },
+
+    factory: {
+      label: "مصنع",
+      icon: "🏭",
+      category: "commerce",
+      cost: 8000,
+      population: 10,
+      income: 220,
+      color: "#a5abb4",
+      height: 2.7
+    },
+
+    office: {
+      label: "مكاتب",
+      icon: "🏢",
+      category: "commerce",
+      cost: 7000,
+      population: 30,
+      income: 300,
+      color: "#81a8c8",
+      height: 4.5
+    },
+
+    hotel: {
+      label: "فندق",
+      icon: "🏨",
+      category: "residential",
+      cost: 9000,
+      population: 12,
+      income: 280,
+      color: "#d8a6bd",
+      height: 4
+    },
+
+    school: {
+      label: "مدرسة",
+      icon: "🏫",
+      category: "education",
+      cost: 4500,
+      population: 0,
+      income: 0,
+      color: "#e7c76f",
+      height: 2.2
+    },
+
+    university: {
+      label: "جامعة",
+      icon: "🎓",
+      category: "education",
+      cost: 15000,
+      population: 0,
+      income: 0,
+      color: "#b9a2d9",
+      height: 4.3
+    },
+
+    library: {
+      label: "مكتبة",
+      icon: "📚",
+      category: "education",
+      cost: 3000,
+      population: 0,
+      income: 0,
+      color: "#c69a73",
+      height: 1.8
+    },
+
+    hospital: {
+      label: "مستشفى",
+      icon: "🏥",
+      category: "services",
+      cost: 10000,
+      population: 0,
+      income: 0,
+      color: "#f0eee7",
+      height: 3.2
+    },
+
+    police: {
+      label: "مركز شرطة",
+      icon: "🚔",
+      category: "services",
+      cost: 6000,
+      population: 0,
+      income: 0,
+      color: "#6284b6",
+      height: 2.1
+    },
+
+    firestation: {
+      label: "مركز إطفاء",
+      icon: "🚒",
+      category: "services",
+      cost: 5500,
+      population: 0,
+      income: 0,
+      color: "#d95749",
+      height: 2.1
+    },
+
+    cinema: {
+      label: "سينما",
+      icon: "🎬",
+      category: "fun",
+      cost: 7000,
+      population: 8,
+      income: 180,
+      color: "#a98ac8",
+      height: 2.8
+    },
+
+    stadium: {
+      label: "استاد رياضي",
+      icon: "🏟️",
+      category: "fun",
+      cost: 25000,
+      population: 20,
+      income: 350,
+      color: "#83b58c",
+      height: 3.5
+    },
+
+    fountain: {
+      label: "نافورة",
+      icon: "⛲",
+      category: "fun",
+      cost: 1800,
+      population: 0,
+      income: 0,
+      color: "#68c8e0",
+      height: 0.8
+    },
+
+    solar: {
+      label: "طاقة شمسية",
+      icon: "☀️",
+      category: "services",
+      cost: 5000,
+      population: 0,
+      income: 90,
+      color: "#e3ca62",
+      height: 0.7
+    }
+  };
+
+  for (const [type, data] of Object.entries(EXTRA_BUILDINGS)) {
+    COST[type] = data.cost;
+
+    INFO[type] = {
+      label: data.label,
+      population: data.population,
+      income: data.income
+    };
+  }
+
+  // ------------------------------------------------------
+  // 2. إنشاء أشكال ثلاثية الأبعاد للمباني الجديدة
+  // ------------------------------------------------------
+
+  const originalCreateBuilding = createBuilding;
+
+  function createSpecialBuilding(type, x, z) {
+    const data = EXTRA_BUILDINGS[type];
+
+    if (!data) return null;
+
+    const g = new THREE.Group();
+
+    const wallMaterial = new THREE.MeshStandardMaterial({
+      color: data.color,
+      roughness: 0.72
+    });
+
+    const glassMaterial = new THREE.MeshStandardMaterial({
+      color: "#a9e5f3",
+      roughness: 0.2,
+      metalness: 0.12,
+      emissive: "#153b4a",
+      emissiveIntensity: 0.1
+    });
+
+    function addBox(w, h, d, mat, px, py, pz) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, d),
+        mat
+      );
+
+      mesh.position.set(px, py, pz);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+
+      g.add(mesh);
+      return mesh;
+    }
+
+    const height = data.height;
+
+    // قاعدة المبنى.
+    addBox(
+      1.8, 0.12, 1.8,
+      new THREE.MeshStandardMaterial({ color: "#d1d0c7" }),
+      0, 0.06, 0
+    );
+
+    // الجسم الأساسي.
+    addBox(
+      1.45,
+      height,
+      1.45,
+      wallMaterial,
+      0,
+      0.12 + height / 2,
+      0
+    );
+
+    // النوافذ.
+    const floors = Math.max(1, Math.floor(height / 0.55));
+
+    for (let floor = 0; floor < floors; floor++) {
+      const y = 0.35 + floor * 0.48;
+
+      if (y > height) continue;
+
+      for (const side of [-1, 1]) {
+        addBox(
+          0.32,
+          0.25,
+          0.035,
+          glassMaterial,
+          side * 0.39,
+          y,
+          0.745
+        );
+      }
+    }
+
+    // السقف.
+    addBox(
+      1.55,
+      0.12,
+      1.55,
+      new THREE.MeshStandardMaterial({ color: "#606d7b" }),
+      0,
+      height + 0.17,
+      0
+    );
+
+    // واجهة مميزة لبعض المباني.
+    if (["school", "hospital", "university"].includes(type)) {
+      addBox(
+        0.5,
+        0.45,
+        0.06,
+        glassMaterial,
+        0,
+        0.48,
+        0.76
+      );
+    }
+
+    // ألواح الطاقة الشمسية.
+    if (type === "solar") {
+      for (let i = -1; i <= 1; i++) {
+        addBox(
+          0.42,
+          0.045,
+          0.5,
+          new THREE.MeshStandardMaterial({
+            color: "#244d80",
+            metalness: 0.35,
+            roughness: 0.3
+          }),
+          i * 0.48,
+          0.9,
+          0
+        );
+      }
+    }
+
+    // النافورة.
+    if (type === "fountain") {
+      const water = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.48, 0.48, 0.12, 16),
+        new THREE.MeshStandardMaterial({
+          color: "#5fcce9",
+          metalness: 0.35,
+          roughness: 0.18
+        })
+      );
+
+      water.position.y = 0.35;
+      g.add(water);
+    }
+
+    g.position.set(x, 0, z);
+    cityGroup.add(g);
+
+    return g;
+  }
+
+  createBuilding = function(type, x, z) {
+    if (EXTRA_BUILDINGS[type]) {
+      return createSpecialBuilding(type, x, z);
+    }
+
+    return originalCreateBuilding(type, x, z);
+  };
+
+  // ------------------------------------------------------
+  // 3. أقسام البناء
+  // ------------------------------------------------------
+
+  const CATEGORIES = [
+    {
+      id: "all",
+      label: "الكل",
+      icon: "🏙️"
+    },
+    {
+      id: "residential",
+      label: "السكن",
+      icon: "🏠"
+    },
+    {
+      id: "commerce",
+      label: "التجارة والاقتصاد",
+      icon: "💼"
+    },
+    {
+      id: "education",
+      label: "التعليم",
+      icon: "🎓"
+    },
+    {
+      id: "services",
+      label: "الخدمات",
+      icon: "🏥"
+    },
+    {
+      id: "fun",
+      label: "الترفيه",
+      icon: "🎡"
+    },
+    {
+      id: "roads",
+      label: "الطرق والتجميل",
+      icon: "🛣️"
+    }
+  ];
+
+  const BUILDING_CATEGORY = {
+    house: "residential",
+    apartment: "residential",
+    tower: "residential",
+    hotel: "residential",
+
+    shop: "commerce",
+    cafe: "commerce",
+    supermarket: "commerce",
+    bank: "commerce",
+    factory: "commerce",
+    office: "commerce",
+
+    school: "education",
+    university: "education",
+    library: "education",
+
+    hospital: "services",
+    police: "services",
+    firestation: "services",
+    solar: "services",
+
+    park: "fun",
+    cinema: "fun",
+    stadium: "fun",
+    fountain: "fun",
+
+    road: "roads",
+    tree: "roads",
+    traffic: "roads"
+  };
+
+  function addStyle() {
+    if ($("m11-expansion-style")) return;
+
+    const style = document.createElement("style");
+    style.id = "m11-expansion-style";
+
+    style.textContent = `
+      #m11-city-categories {
+        direction: rtl;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        padding: 10px;
+        margin: 8px;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 16px;
+        background: rgba(14,24,39,.94);
+        backdrop-filter: blur(14px);
+        max-height: 150px;
+        overflow-y: auto;
+      }
+
+      #m11-city-categories button {
+        border: 1px solid rgba(255,255,255,.13);
+        border-radius: 10px;
+        padding: 9px 12px;
+        background: #263449;
+        color: #fff;
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      #m11-city-categories button.active {
+        background: #d8b66a;
+        color: #182333;
+        border-color: #f4d994;
+      }
+
+      .build-btn.m11-hidden {
+        display: none !important;
+      }
+
+      #m11-city-actions {
+        position: fixed;
+        z-index: 30;
+        left: 12px;
+        top: 105px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 185px;
+        direction: rtl;
+      }
+
+      .m11-city-action {
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 12px;
+        padding: 11px 13px;
+        color: #fff;
+        background: rgba(18,29,46,.94);
+        box-shadow: 0 6px 20px #0003;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .m11-city-action.active {
+        background: #b98a3e;
+        color: #111c29;
+      }
+
+      #m11-city-level {
+        color: #fff;
+        background: rgba(18,29,46,.94);
+        border: 1px solid rgba(255,255,255,.15);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 650px) {
+        #m11-city-actions {
+          top: 100px;
+          left: 7px;
+          max-width: 150px;
+        }
+
+        .m11-city-action {
+          padding: 9px 10px;
+          font-size: 11px;
+        }
+
+        #m11-city-categories {
+          gap: 5px;
+          padding: 7px;
+          margin: 5px;
+          max-height: 120px;
+        }
+
+        #m11-city-categories button {
+          padding: 8px;
+          font-size: 11px;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  function setupCategories() {
+    const firstButton = document.querySelector(".build-btn");
+
+    if (!firstButton || !firstButton.parentElement) return;
+
+    const container = firstButton.parentElement;
+
+    // إضافة أزرار المباني الجديدة.
+    for (const [type, data] of Object.entries(EXTRA_BUILDINGS)) {
+      if (document.querySelector(
+        '.build-btn[data-type="' + type + '"]'
+      )) continue;
+
+      const button = document.createElement("button");
+
+      button.type = "button";
+      button.className = "build-btn";
+      button.dataset.type = type;
+      button.title = data.label + " — " + data.cost + " 💰";
+      button.setAttribute("aria-pressed", "false");
+
+      const icon = document.createElement("span");
+      icon.className = "building-icon";
+      icon.textContent = data.icon;
+
+      const label = document.createElement("span");
+      label.className = "building-name";
+      label.textContent = data.label;
+
+      const price = document.createElement("small");
+      price.textContent = data.cost.toLocaleString("en-US") + " 💰";
+
+      button.append(icon, label, price);
+      container.appendChild(button);
+
+      // نفس نظام اختيار المباني الموجود في اللعبة.
+      button.addEventListener("click", () => {
+        selectedType = type;
+
+        document.querySelectorAll(".build-btn").forEach(other => {
+          const active = other === button;
+
+          other.classList.toggle("active", active);
+          other.setAttribute("aria-pressed", String(active));
+        });
+
+        upgradeMode = false;
+        $("m11-upgrade-btn")?.classList.remove("active");
+
+        showToast(data.label + " — اختر مكان البناء.");
+      });
+    }
+
+    // إنشاء قائمة الأقسام.
+    if (!$("m11-city-categories")) {
+      const panel = document.createElement("div");
+      panel.id = "m11-city-categories";
+
+      CATEGORIES.forEach(category => {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.textContent = category.icon + " " + category.label;
+        button.dataset.category = category.id;
+
+        if (category.id === "all") button.classList.add("active");
+
+        button.addEventListener("click", () => {
+          panel.querySelectorAll("button").forEach(b => {
+            b.classList.toggle("active", b === button);
+          });
+
+          document.querySelectorAll(".build-btn").forEach(buildButton => {
+            const type = buildButton.dataset.type;
+            const typeCategory = BUILDING_CATEGORY[type] || "roads";
+
+            buildButton.classList.toggle(
+              "m11-hidden",
+              category.id !== "all" && typeCategory !== category.id
+            );
+          });
+        });
+
+        panel.appendChild(button);
+      });
+
+      container.parentElement.insertBefore(panel, container);
+    }
+  }
+
+  // ------------------------------------------------------
+  // 4. تطوير المباني
+  // ------------------------------------------------------
+
+  const UPGRADE_KEY = "M11_CITY_UPGRADES_V1";
+
+  let upgradeLevels = {};
+
+  try {
+    upgradeLevels = JSON.parse(
+      localStorage.getItem(UPGRADE_KEY) || "{}"
+    );
+
+    if (!upgradeLevels || typeof upgradeLevels !== "object") {
+      upgradeLevels = {};
+    }
+  } catch (_) {
+    upgradeLevels = {};
+  }
+
+  let upgradeMode = false;
+
+  function getLevel(item) {
+    return Math.max(1, Number(upgradeLevels[item.key]) || 1);
+  }
+
+  function saveUpgradeLevels() {
+    try {
+      localStorage.setItem(
+        UPGRADE_KEY,
+        JSON.stringify(upgradeLevels)
+      );
+    } catch (error) {
+      console.warn("تعذر حفظ الترقيات:", error);
+    }
+  }
+
+  function applyVisualLevel(item) {
+    if (!item || !item.object) return;
+
+    const level = getLevel(item);
+
+    // تكبير المبنى تدريجيًا مع كل مستوى.
+    const scale = Math.min(1 + (level - 1) * 0.09, 1.65);
+
+    item.object.scale.setScalar(scale);
+  }
+
+  function restoreUpgradeLevels() {
+    for (const item of objects) {
+      const level = getLevel(item);
+
+      if (level <= 1) continue;
+
+      // إحصاءات المستوى الأول محسوبة بالفعل عند تحميل المدينة.
+      const info = INFO[item.type];
+
+      if (info) {
+        population += info.population * (level - 1);
+        income += info.income * (level - 1);
+      }
+
+      applyVisualLevel(item);
+    }
+
+    updateHUD();
+  }
+
+  function upgradeBuildingAt(x, z) {
+    const key = cellKey(snap(x), snap(z));
+    const item = objects.find(obj => obj.key === key);
+
+    if (!item || item.starter) {
+      showToast("اختار مبنى موجودًا لترقيته.");
+      return;
+    }
+
+    const oldLevel = getLevel(item);
+    const price = Math.round(1500 * Math.pow(oldLevel, 1.65));
+
+    if (money < price) {
+      showToast(
+        "تحتاج إلى " + price.toLocaleString("en-US") + " 💰 للترقية."
+      );
+      return;
+    }
+
+    money -= price;
+
+    const info = INFO[item.type];
+
+    if (info) {
+      population += info.population;
+      income += info.income;
+    }
+
+    upgradeLevels[item.key] = oldLevel + 1;
+
+    applyVisualLevel(item);
+    saveUpgradeLevels();
+    saveGame();
+    updateHUD();
+
+    showToast(
+      "تم تطوير المبنى إلى المستوى " +
+      (oldLevel + 1) +
+      " 🏗️"
+    );
+  }
+
+  const originalHandleWorldTap = handleWorldTap;
+
+  handleWorldTap = function(clientX, clientY) {
+    if (!upgradeMode) {
+      return originalHandleWorldTap(clientX, clientY);
+    }
+
+    const point = getGroundPoint(clientX, clientY);
+
+    if (point) {
+      upgradeBuildingAt(point.x, point.z);
+    }
+  };
+
+  // ------------------------------------------------------
+  // 5. توسيع مساحة المدينة
+  // ------------------------------------------------------
+
+  const EXPANSION_KEY = "M11_CITY_EXPANSION_V1";
+
+  let citySize = 24;
+  const MAX_CITY_SIZE = 60;
+  const EXPANSION_STEP = 12;
+
+  try {
+    const savedSize = Number(localStorage.getItem(EXPANSION_KEY));
+
+    if (savedSize >= 24 && savedSize <= MAX_CITY_SIZE) {
+      citySize = savedSize;
+    }
+  } catch (_) {}
+
+  // نوسّع حدود البناء دون تغيير مواقع المباني الموجودة.
+  isInside = function(x, z) {
+    return Math.abs(x) < citySize / 2 &&
+           Math.abs(z) < citySize / 2;
+  };
+
+  function updateLandVisuals() {
+    if (ground) {
+      const scale = citySize / 24;
+      ground.scale.set(scale, 1, scale);
+    }
+
+    // توسيع شبكة الأرض.
+    if (cityGroup) {
+      cityGroup.children.forEach(child => {
+        if (child.type === "GridHelper") {
+          const scale = citySize / 24;
+          child.scale.set(scale, 1, scale);
+        }
+      });
+    }
+
+    // حدود الأرض الخارجية الجديدة.
+    const borderMaterial = new THREE.MeshStandardMaterial({
+      color: "#47734c",
+      roughness: 0.9
+    });
+
+    const half = citySize / 2;
+
+    for (const i of [-1, 1]) {
+      const edge = new THREE.Mesh(
+        new THREE.BoxGeometry(citySize, 0.25, 0.2),
+        borderMaterial
+      );
+
+      edge.position.set(0, 0.13, i * half);
+      cityGroup.add(edge);
+
+      const side = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.25, citySize),
+        borderMaterial
+      );
+
+      side.position.set(i * half, 0.13, 0);
+      cityGroup.add(side);
+    }
+  }
+
+  function expandCity() {
+    if (citySize >= MAX_CITY_SIZE) {
+      showToast("وصلت إلى أكبر مساحة متاحة للمدينة! 🌍");
+      return;
+    }
+
+    const nextSize = Math.min(
+      citySize + EXPANSION_STEP,
+      MAX_CITY_SIZE
+    );
+
+    const price = Math.round(
+      50000 * Math.pow((nextSize - 24) / 12, 1.4)
+    );
+
+    if (money < price) {
+      showToast(
+        "تحتاج إلى " + price.toLocaleString("en-US") +
+        " 💰 لتوسيع المدينة."
+      );
+      return;
+    }
+
+    money -= price;
+    citySize = nextSize;
+
+    try {
+      localStorage.setItem(EXPANSION_KEY, String(citySize));
+    } catch (_) {}
+
+    updateLandVisuals();
+    updateHUD();
+    saveGame();
+
+    showToast(
+      "مبروك! مساحة مدينتك أصبحت " +
+      citySize + " × " + citySize + " 🏙️"
+    );
+
+    const levelLabel = $("m11-city-level");
+
+    if (levelLabel) {
+      levelLabel.textContent = "مساحة المدينة: " + citySize + " × " + citySize;
+    }
+  }
+
+  // ------------------------------------------------------
+  // 6. أزرار التطوير والتوسعة
+  // ------------------------------------------------------
+
+  function createCityActions() {
+    if ($("m11-city-actions")) return;
+
+    const actions = document.createElement("div");
+    actions.id = "m11-city-actions";
+
+    const upgradeButton = document.createElement("button");
+    upgradeButton.id = "m11-upgrade-btn";
+    upgradeButton.className = "m11-city-action";
+    upgradeButton.textContent = "⬆️ تطوير مبنى";
+
+    upgradeButton.addEventListener("click", () => {
+      upgradeMode = !upgradeMode;
+
+      if (upgradeMode) {
+        selectedType = null;
+
+        document.querySelectorAll(".build-btn").forEach(button => {
+          button.classList.remove("active");
+          button.setAttribute("aria-pressed", "false");
+        });
+
+        showToast("اضغط على المبنى الذي تريد تطويره.");
+      } else {
+        showToast("تم إلغاء وضع التطوير.");
+      }
+
+      upgradeButton.classList.toggle("active", upgradeMode);
+    });
+
+    const expandButton = document.createElement("button");
+    expandButton.id = "m11-expand-btn";
+    expandButton.className = "m11-city-action";
+    expandButton.textContent = "🌍 توسيع المدينة";
+
+    expandButton.addEventListener("click", expandCity);
+
+    const levelLabel = document.createElement("div");
+    levelLabel.id = "m11-city-level";
+    levelLabel.textContent =
+      "مساحة المدينة: " + citySize + " × " + citySize;
+
+    actions.append(upgradeButton, expandButton, levelLabel);
+    document.body.appendChild(actions);
+  }
+
+  // ------------------------------------------------------
+  // 7. تشغيل الإضافات
+  // ------------------------------------------------------
+
+  addStyle();
+  setupCategories();
+  createCityActions();
+
+  // تطبيق حجم الترقيات المحفوظة.
+  restoreUpgradeLevels();
+
+  // إعادة رسم الأرض إذا كانت المدينة موسعة من قبل.
+  updateLandVisuals();
+
+  console.log("M11 CITY BUILDER Expansion Pack loaded.");
+})();
 })();
