@@ -1,11 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
 
 :root {
-  --bg: #101916;
-  --panel: rgba(15, 25, 22, .90);
-  --gold: #f2bc55;
-  --green: #72d5a0;
-  --white: #f7f8f3;
+  --bg: #101b2d;
+  --panel: rgba(15, 27, 44, 0.94);
+  --panel-border: rgba(255, 255, 255, 0.12);
+  --gold: #ffd166;
+  --green: #59d99b;
+  --text: #ffffff;
+  --muted: #a9b7cc;
 }
 
 * {
@@ -13,534 +15,481 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   margin: 0;
   overflow: hidden;
-  background: #9cc8e7;
-  color: var(--white);
-  font-family: 'Cairo', Tahoma, sans-serif;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
+  font-family: 'Cairo', sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  touch-action: manipulation;
+  overscroll-behavior: none;
 }
 
 button {
   font: inherit;
   color: inherit;
-  cursor: pointer;
   border: 0;
-  -webkit-appearance: none;
-  appearance: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 #game {
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  background: linear-gradient(#9ac7df, #d5d7b0);
-  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 50% 20%, #b5d9cf 0%, #8db9b1 35%, #6a9b92 70%, #426f6a 100%);
 }
 
-#gameCanvas {
-  position: fixed;
+#game canvas {
+  position: absolute;
   inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  z-index: 0;
-  touch-action: none;
+  outline: none;
 }
 
 .hidden {
   display: none !important;
 }
 
-.loading {
+/* شاشة التحميل */
+
+#loading {
   position: absolute;
   inset: 0;
-  z-index: 20;
+  z-index: 100;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at center, #253a30, #0b100e 75%);
-}
-
-.loading-logo,
-.brand-icon {
-  display: grid;
-  place-items: center;
-  color: #172019;
-  background: var(--gold);
-  font-weight: 900;
-}
-
-.loading-logo {
-  width: 88px;
-  height: 88px;
-  border-radius: 27px;
-  font-size: 52px;
-  box-shadow: 0 0 45px #f2bc5540;
-}
-
-.loading h1 {
-  margin: 15px 0 0;
-  font-size: clamp(27px, 7vw, 44px);
-  letter-spacing: 4px;
-}
-
-.loading p {
-  color: #b9c8bd;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(145deg, #101b2d, #203c55);
   text-align: center;
-  padding: 0 20px;
 }
 
-.loading-track {
-  width: 180px;
-  height: 4px;
-  overflow: hidden;
-  border-radius: 20px;
-  background: #ffffff20;
+#loading h2 {
+  margin: 12px 0 0;
+  font-size: clamp(22px, 5vw, 38px);
+  letter-spacing: 2px;
 }
 
-.loading-track span {
-  display: block;
-  width: 40%;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--gold);
-  animation: loading 1.1s ease-in-out infinite alternate;
+#loading p {
+  color: var(--muted);
+  margin: 0;
+  font-size: 14px;
 }
 
-@keyframes loading {
+.loader {
+  width: 56px;
+  height: 56px;
+  border: 5px solid rgba(255, 255, 255, 0.14);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
   to {
-    transform: translateX(-150%);
+    transform: rotate(360deg);
   }
 }
 
-.hud {
+/* الواجهة */
+
+#hud {
   position: absolute;
   inset: 0;
   z-index: 5;
   pointer-events: none;
 }
 
-.hud button {
+#hud button {
   pointer-events: auto;
 }
 
-.topbar {
+.top-bar {
   position: absolute;
   top: max(12px, env(safe-area-inset-top));
-  right: 12px;
   left: 12px;
+  right: 12px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   gap: 10px;
+  padding: 10px 13px;
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.17);
+  backdrop-filter: blur(12px);
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 8px 12px;
-  border: 1px solid #ffffff1b;
-  border-radius: 16px;
-  background: var(--panel);
-  backdrop-filter: blur(12px);
 }
 
 .brand-icon {
+  display: grid;
+  place-items: center;
   width: 42px;
   height: 42px;
-  border-radius: 12px;
-  font-size: 25px;
-}
-
-.brand strong,
-.brand small {
-  display: block;
-}
-
-.brand strong {
-  font-size: 15px;
-  letter-spacing: 1px;
-}
-
-.brand small {
-  color: #b8c7bd;
-  font-size: 10px;
-}
-
-.money {
-  min-width: 112px;
-  padding: 8px 14px;
-  text-align: center;
-  border: 1px solid #ffffff1b;
-  border-radius: 15px;
-  background: var(--panel);
-  backdrop-filter: blur(12px);
-}
-
-.money span,
-.money strong {
-  display: block;
-}
-
-.money span {
-  color: #bac7bc;
-  font-size: 10px;
-}
-
-.money strong {
-  color: var(--gold);
-  font-size: 15px;
-}
-
-.dashboard {
-  position: absolute;
-  top: 91px;
-  right: 12px;
-  left: 12px;
-  display: flex;
-  align-items: stretch;
-  gap: 7px;
-  max-width: 470px;
-}
-
-.speed-box,
-.info-box,
-.gear-box {
-  padding: 7px 11px;
-  border: 1px solid #ffffff1b;
   border-radius: 13px;
-  background: var(--panel);
-  backdrop-filter: blur(10px);
+  background: linear-gradient(145deg, #355a74, #1a334b);
+  font-size: 23px;
 }
 
-.speed-box {
-  min-width: 95px;
+.brand h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.4;
 }
 
-.info-box {
-  flex: 1;
-  min-width: 75px;
-}
-
-.gear-box {
-  min-width: 60px;
-  text-align: center;
-}
-
-.small-label {
-  display: block;
-  color: #c1cdc4;
-  font-size: 10px;
-}
-
-.speed-box div {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-}
-
-.speed-box strong {
-  color: var(--gold);
-  font-size: 27px;
-  line-height: 1.2;
-}
-
-.speed-box div span {
-  font-size: 10px;
-}
-
-.fuel-track {
-  height: 7px;
-  margin: 8px 0 3px;
-  overflow: hidden;
-  border-radius: 10px;
-  background: #ffffff25;
-}
-
-.fuel-track span {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--green);
-  transition: width .2s, background .2s;
-}
-
-.info-box > strong {
+.brand small {
+  color: var(--muted);
   font-size: 11px;
 }
 
-.gear-box > strong {
-  display: block;
-  color: var(--green);
-  font-size: 24px;
-}
-
-.road-message {
-  position: absolute;
-  top: 166px;
-  left: 50%;
-  max-width: 90%;
-  padding: 7px 15px;
-  transform: translateX(-50%);
-  border: 1px solid #ffffff1b;
-  border-radius: 30px;
-  background: #101916bf;
-  color: white;
-  font-size: 12px;
-  text-align: center;
-  white-space: nowrap;
-  backdrop-filter: blur(8px);
-  pointer-events: none;
-}
-
-.camera-btn {
-  position: absolute;
-  top: 213px;
-  left: 12px;
-  padding: 10px 14px;
-  border: 1px solid #ffffff35;
-  border-radius: 13px;
-  background: var(--panel);
-  font-size: 12px;
-  pointer-events: auto;
-}
-
-.camera-btn span {
-  color: var(--gold);
-  margin-left: 5px;
-}
-
-.controls {
-  position: absolute;
-  right: 14px;
-  bottom: max(80px, calc(env(safe-area-inset-bottom) + 70px));
-  left: 14px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 10px;
-  pointer-events: none;
-}
-
-.steering,
-.pedals {
+.money-box {
   display: flex;
   align-items: center;
-  gap: 10px;
-  pointer-events: auto;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 209, 102, 0.25);
+  border-radius: 12px;
+  background: rgba(255, 209, 102, 0.1);
+  color: var(--gold);
+  direction: ltr;
 }
 
-.control-btn {
+.money-box strong {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+/* الإحصائيات */
+
+.city-stats {
+  position: absolute;
+  top: 88px;
+  left: 12px;
+  display: flex;
+  gap: 7px;
+  direction: ltr;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 13px;
+  background: var(--panel);
+  min-width: 84px;
+}
+
+.stat > span {
+  font-size: 20px;
+}
+
+.stat div {
+  display: flex;
+  flex-direction: column;
+  direction: rtl;
+}
+
+.stat small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.stat strong {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+/* أزرار الكاميرا */
+
+.right-tools {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.tool-btn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: var(--panel);
+  font-size: 22px;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s, background 0.15s;
+}
+
+.tool-btn:active {
+  transform: scale(0.92);
+  background: #29435c;
+}
+
+/* لوحة البناء */
+
+.build-panel {
+  position: absolute;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: 12px;
+  right: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 21px;
+  background: var(--panel);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(16px);
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.panel-heading h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.panel-heading p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.cancel-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffb5b5;
+  font-size: 17px;
+}
+
+.build-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.build-btn {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 1px solid #ffffff45;
-  box-shadow: 0 5px 18px #00000035;
-  backdrop-filter: blur(8px);
-  touch-action: none;
-  pointer-events: auto;
+  gap: 3px;
+  padding: 9px 3px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.055);
+  transition: transform 0.15s, background 0.15s, border-color 0.15s;
 }
 
-.steer {
-  width: clamp(54px, 15vw, 76px);
-  height: clamp(54px, 15vw, 76px);
-  border-radius: 50%;
-  background: #111c18e8;
-  font-size: 28px;
+.build-btn:active {
+  transform: scale(0.95);
 }
 
-.gas,
-.brake {
-  width: clamp(57px, 16vw, 77px);
-  height: clamp(75px, 19vw, 98px);
-  border-radius: 18px;
-  gap: 4px;
+.build-btn.active {
+  border-color: var(--gold);
+  background: rgba(255, 209, 102, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(255, 209, 102, 0.1);
 }
 
-.gas {
-  background: linear-gradient(160deg, #28895b, #14573a);
+.build-btn .building-icon {
+  font-size: 27px;
+  line-height: 1.3;
 }
 
-.brake {
-  background: linear-gradient(160deg, #c94c3e, #792a25);
-}
-
-.control-btn span {
-  font-size: 25px;
-}
-
-.control-btn small {
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.control-btn:active,
-.utility-btn:active,
-.camera-btn:active {
-  filter: brightness(1.3);
-  transform: scale(.96);
-}
-
-.bottom-bar {
-  position: absolute;
-  right: 12px;
-  bottom: max(12px, env(safe-area-inset-bottom));
-  left: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.utility-btn,
-.status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 42px;
-  padding: 9px 13px;
-  border: 1px solid #ffffff24;
-  border-radius: 13px;
-  background: var(--panel);
+.build-btn > span:nth-child(2) {
   font-size: 12px;
-  pointer-events: auto;
-}
-
-.utility-btn {
-  color: var(--gold);
-}
-
-.status {
-  color: #d4ded6;
-  font-size: 10px;
-}
-
-.status i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #df6258;
-}
-
-.status i.on {
-  background: var(--green);
-  box-shadow: 0 0 10px #72d5a0;
-}
-
-.error-box {
-  position: absolute;
-  z-index: 30;
-  top: 50%;
-  right: 20px;
-  left: 20px;
-  padding: 24px;
-  transform: translateY(-50%);
-  border: 1px solid #ffffff25;
-  border-radius: 20px;
-  background: #101916f5;
-  text-align: center;
-}
-
-.error-box p {
-  color: #c7d2ca;
-  font-size: 13px;
-}
-
-.error-box button {
-  padding: 10px 20px;
-  border-radius: 10px;
-  background: var(--gold);
-  color: #111;
   font-weight: 800;
 }
 
-@media (max-width: 360px) {
-  .brand {
-    gap: 6px;
-    padding: 6px;
+.build-btn small {
+  color: var(--gold);
+  font-size: 10px;
+  direction: ltr;
+}
+
+/* التنبيهات */
+
+.toast {
+  position: absolute;
+  top: 145px;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100% - 100px);
+  transform: translate(-50%, -10px);
+  padding: 10px 15px;
+  border: 1px solid var(--panel-border);
+  border-radius: 13px;
+  background: #142438;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.version {
+  position: absolute;
+  bottom: 3px;
+  left: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+/* الشاشات الصغيرة */
+
+@media (max-width: 390px) {
+  .top-bar {
+    padding: 8px 10px;
   }
 
   .brand-icon {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
   }
 
-  .money {
-    min-width: 90px;
-    padding: 6px;
+  .brand h1 {
+    font-size: 12px;
   }
 
-  .dashboard {
-    top: 82px;
+  .money-box {
+    padding: 7px 9px;
+  }
+
+  .money-box strong {
+    font-size: 14px;
+  }
+
+  .city-stats {
+    top: 78px;
+    left: 8px;
     gap: 5px;
   }
 
-  .speed-box,
-  .info-box,
-  .gear-box {
+  .stat {
+    min-width: 72px;
+    gap: 4px;
     padding: 6px;
   }
 
-  .road-message {
-    top: 155px;
+  .stat > span {
+    font-size: 17px;
+  }
+
+  .stat small {
+    font-size: 9px;
+  }
+
+  .stat strong {
+    font-size: 12px;
+  }
+
+  .build-panel {
+    left: 8px;
+    right: 8px;
+    padding: 11px;
+  }
+
+  .build-options {
+    gap: 5px;
+  }
+
+  .build-btn .building-icon {
+    font-size: 23px;
+  }
+
+  .build-btn > span:nth-child(2) {
+    font-size: 11px;
+  }
+
+  .build-btn small {
+    font-size: 9px;
+  }
+
+  .right-tools {
+    right: 8px;
+  }
+}
+
+@media (max-height: 520px) {
+  .top-bar {
+    top: 6px;
+    padding: 6px 10px;
+  }
+
+  .city-stats {
+    top: 64px;
+  }
+
+  .build-panel {
+    bottom: 6px;
+    padding: 8px 12px;
+  }
+
+  .panel-heading {
+    margin-bottom: 5px;
+  }
+
+  .panel-heading h2 {
+    font-size: 13px;
+  }
+
+  .panel-heading p {
     font-size: 10px;
   }
 
-  .camera-btn {
-    top: 197px;
+  .build-btn {
+    padding: 4px;
   }
 
-  .controls {
-    right: 8px;
-    left: 8px;
-    bottom: 75px;
+  .build-btn .building-icon {
+    font-size: 20px;
   }
 
-  .steering,
-  .pedals {
-    gap: 6px;
-  }
-}
-
-@media (min-width: 700px) {
-  .topbar {
-    right: 22px;
-    left: 22px;
+  .right-tools {
+    gap: 5px;
   }
 
-  .dashboard {
-    top: 100px;
-    right: 22px;
+  .tool-btn {
+    width: 37px;
+    height: 37px;
   }
-
-  .road-message {
-    top: 190px;
   }
-
-  .camera-btn {
-    top: 245px;
-    left: 22px;
-  }
-
-  .controls {
-    right: 28px;
-    bottom: 90px;
-    left: 28px;
-  }
-
-  .bottom-bar {
-    right: 22px;
-    bottom: 20px;
-    left: 22px;
-  }
-}
