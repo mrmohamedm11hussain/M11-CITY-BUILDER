@@ -2,157 +2,112 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#101b2d">
 
-  <meta name="theme-color" content="#101916">
-  <meta name="description" content="EL OSTTA - تجربة قيادة ميكروباص مصرية ثلاثية الأبعاد">
+  <title>M11 CITY BUILDER</title>
 
-  <title>EL OSTTA | الأسطى المصري</title>
-
-  <link rel="stylesheet" href="./style.css">
-
-  <style>
-    #gameCanvas {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      z-index: 0 !important;
-    }
-
-    #hud {
-      z-index: 5;
-    }
-
-    #loading {
-      z-index: 20;
-    }
-
-    #errorBox {
-      z-index: 30;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
   <div id="game">
-
-    <div id="loading" class="loading">
-      <div class="loading-logo">أ</div>
-      <h1>EL OSTTA</h1>
-      <p id="loadingText">بنجهّز العربية يا أسطى...</p>
-      <div class="loading-track"><span></span></div>
+    <div id="loading">
+      <div class="loader"></div>
+      <h2>M11 CITY BUILDER</h2>
+      <p>جاري تجهيز مدينتك...</p>
     </div>
 
-    <div id="hud" class="hud hidden">
-
-      <header class="topbar">
+    <div id="hud" class="hidden">
+      <header class="top-bar">
         <div class="brand">
-          <span class="brand-icon">أ</span>
+          <span class="brand-icon">🏙️</span>
           <div>
-            <strong>EL OSTTA</strong>
-            <small>الأسطى المصري</small>
+            <h1>M11 CITY</h1>
+            <small>ابنِ مدينتك</small>
           </div>
         </div>
 
-        <div class="money">
-          <span>الرصيد</span>
-          <strong id="money">250 ج.م</strong>
+        <div class="money-box">
+          <span>💰</span>
+          <strong id="money">5000</strong>
         </div>
       </header>
 
-      <section class="dashboard">
-        <div class="speed-box">
-          <span class="small-label">السرعة</span>
+      <div class="city-stats">
+        <div class="stat">
+          <span>🏠</span>
           <div>
-            <strong id="speed">0</strong>
-            <span>كم/س</span>
+            <small>السكان</small>
+            <strong id="population">0</strong>
           </div>
         </div>
 
-        <div class="info-box">
-          <span class="small-label">الوقود</span>
-          <div class="fuel-track">
-            <span id="fuelBar"></span>
+        <div class="stat">
+          <span>🏗️</span>
+          <div>
+            <small>المباني</small>
+            <strong id="buildings">0</strong>
           </div>
-          <strong id="fuelText">100%</strong>
         </div>
 
-        <div class="gear-box">
-          <span class="small-label">ناقل الحركة</span>
-          <strong id="gear">N</strong>
+        <div class="stat">
+          <span>📈</span>
+          <div>
+            <small>الدخل</small>
+            <strong id="income">0</strong>
+          </div>
         </div>
-      </section>
-
-      <div class="road-message" id="message">
-        أهلاً يا أسطى! شغّل العربية وانطلق.
       </div>
 
-      <button id="cameraBtn" class="camera-btn" type="button">
-        <span>◉</span> كاميرا داخلية
-      </button>
-
-      <div class="controls">
-
-        <div class="steering">
-          <button class="control-btn steer"
-                  type="button"
-                  data-control="left"
-                  aria-label="لف شمال">◀</button>
-
-          <button class="control-btn steer"
-                  type="button"
-                  data-control="right"
-                  aria-label="لف يمين">▶</button>
-        </div>
-
-        <div class="pedals">
-          <button id="brakeBtn"
-                  class="control-btn brake"
-                  type="button"
-                  data-control="brake">
-            <span>▰</span>
-            <small>فرامل</small>
-          </button>
-
-          <button id="gasBtn"
-                  class="control-btn gas"
-                  type="button"
-                  data-control="gas">
-            <span>▲</span>
-            <small>بنزين</small>
-          </button>
-        </div>
-
+      <div class="right-tools">
+        <button id="cameraBtn" class="tool-btn" aria-label="تدوير الكاميرا">🔄</button>
+        <button id="zoomInBtn" class="tool-btn" aria-label="تكبير">＋</button>
+        <button id="zoomOutBtn" class="tool-btn" aria-label="تصغير">－</button>
       </div>
 
-      <footer class="bottom-bar">
-        <button id="engineBtn" class="utility-btn" type="button">
-          ⏻ <span>تشغيل المحرك</span>
-        </button>
-
-        <div class="status">
-          <i id="engineLight"></i>
-          <span id="engineStatus">المحرك متوقف</span>
+      <div class="build-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>🏗️ بناء المدينة</h2>
+            <p>اختار المبنى واضغط على الأرض</p>
+          </div>
+          <button id="cancelBuild" class="cancel-btn">✕</button>
         </div>
-      </footer>
 
+        <div class="build-options">
+          <button class="build-btn" data-type="house">
+            <span class="building-icon">🏠</span>
+            <span>منزل</span>
+            <small>500 💰</small>
+          </button>
+
+          <button class="build-btn" data-type="shop">
+            <span class="building-icon">🏪</span>
+            <span>متجر</span>
+            <small>900 💰</small>
+          </button>
+
+          <button class="build-btn" data-type="road">
+            <span class="building-icon">🛣️</span>
+            <span>طريق</span>
+            <small>100 💰</small>
+          </button>
+
+          <button class="build-btn" data-type="tree">
+            <span class="building-icon">🌳</span>
+            <span>شجرة</span>
+            <small>150 💰</small>
+          </button>
+        </div>
+      </div>
+
+      <div id="toast" class="toast"></div>
+
+      <div class="version">M11 • CITY BUILDER</div>
     </div>
-
-    <div id="errorBox" class="error-box hidden">
-      <strong>تعذّر تشغيل اللعبة</strong>
-      <p id="errorText">
-        تأكد من اتصال الإنترنت ثم حاول مرة أخرى.
-      </p>
-      <button type="button" onclick="location.reload()">
-        إعادة المحاولة
-      </button>
-    </div>
-
   </div>
 
-  <!-- تشغيل اللعبة -->
-  <script type="module" src="./game.js"></script>
+  <script type="module" src="game.js"></script>
 </body>
 </html>
