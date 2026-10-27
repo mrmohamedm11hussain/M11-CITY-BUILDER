@@ -1,80 +1,91 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="author" content="Mohamed Hussain">
-  <title>الأسطى | لعبة الميكروباص - M11</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#101916">
+  <meta name="description" content="EL OSTTA - تجربة قيادة ميكروباص مصرية ثلاثية الأبعاد">
+  <title>EL OSTTA | الأسطى</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <main class="game">
-    <header class="hud">
-      <h1>الأسطى</h1>
-      <dl>
-        <div><dt>المحطة</dt><dd id="hudStop">1</dd></div>
-        <div><dt>الحساب</dt><dd id="hudScore">0</dd></div>
-        <div id="fuelBox"><dt>البنزين</dt><dd id="hudFuel">100%</dd></div>
-        <div><dt>الزعلانين</dt><dd id="hudLives" aria-live="polite"></dd></div>
-      </dl>
-    </header>
-
-    <div class="tools">
-      <button class="ghost" id="refuel" type="button">⛽ تموين (٣ جنيه لكل ١٠٪)</button>
-      <button class="ghost" id="mute" type="button" aria-label="كتم الصوت">🔊</button>
+  <div id="game">
+    <div id="loading" class="loading">
+      <div class="loading-logo">أ</div>
+      <h1>EL OSTTA</h1>
+      <p>بنجهّز العربية يا أسطى...</p>
+      <div class="loading-track"><span></span></div>
     </div>
 
-    <section class="road" id="road" aria-label="الطريق">
-      <span class="sign" id="sign">🚏</span>
-      <span class="bus" id="bus">🚐</span>
-    </section>
+    <div id="hud" class="hud hidden">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-icon">أ</span>
+          <div>
+            <strong>EL OSTTA</strong>
+            <small>الأسطى المصري</small>
+          </div>
+        </div>
+        <div class="money">
+          <span>الرصيد</span>
+          <strong id="money">250 ج.م</strong>
+        </div>
+      </header>
 
-    <section class="desk" aria-live="polite">
-      <div class="queue" id="queue"></div>
-      <div class="passenger">
-        <span class="face" id="face">🧔</span>
-        <div>
-          <p class="say" id="say"></p>
-          <p class="bill" id="bill"></p>
+      <section class="dashboard">
+        <div class="speed-box">
+          <span class="small-label">السرعة</span>
+          <div><strong id="speed">0</strong><span>كم/س</span></div>
+        </div>
+        <div class="info-box">
+          <span class="small-label">الوقود</span>
+          <div class="fuel-track"><span id="fuelBar"></span></div>
+          <strong id="fuelText">100%</strong>
+        </div>
+        <div class="gear-box">
+          <span class="small-label">ناقل الحركة</span>
+          <strong id="gear">N</strong>
+        </div>
+      </section>
+
+      <div class="road-message" id="message">
+        أهلاً يا أسطى! شغّل العربية وانطلق.
+      </div>
+
+      <button id="cameraBtn" class="camera-btn">
+        <span>◉</span> تغيير الكاميرا
+      </button>
+
+      <div class="controls">
+        <div class="steering">
+          <button class="control-btn steer" data-control="left" aria-label="لف شمال">◀</button>
+          <button class="control-btn steer" data-control="right" aria-label="لف يمين">▶</button>
+        </div>
+
+        <div class="pedals">
+          <button id="brakeBtn" class="control-btn brake" data-control="brake">
+            <span>▰</span><small>فرامل</small>
+          </button>
+          <button id="gasBtn" class="control-btn gas" data-control="gas">
+            <span>▲</span><small>بنزين</small>
+          </button>
         </div>
       </div>
-      <div class="patience"><i id="patience"></i></div>
 
-      <div class="requests" id="requests"></div>
+      <footer class="bottom-bar">
+        <button id="engineBtn" class="utility-btn">⏻ <span>تشغيل المحرك</span></button>
+        <div class="status"><i id="engineLight"></i><span id="engineStatus">المحرك متوقف</span></div>
+      </footer>
+    </div>
 
-      <p class="hand">في إيدك: <b id="handSum">0</b> جنيه</p>
-      <div class="notes" id="notes"></div>
-      <div class="actions">
-        <button class="ghost" id="clear" type="button">امسح</button>
-        <button class="primary" id="give" type="button">ادّي الباقي</button>
-      </div>
-      <p class="toast" id="toast" role="status"></p>
-    </section>
-
-    <footer>تطوير Mr. Mohamed Hussain &middot; شركة M11</footer>
-  </main>
-
-  <div class="overlay" id="overlay">
-    <div class="card">
-      <h2 id="ovTitle">يلا يا أسطى</h2>
-      <p id="ovText">الأجرة ٥ جنيه للفرد. رجّع الباقي بالظبط، ونفّذ طلبات الركاب، وخلّي عينك على البنزين. ٣ زعلانين والوردية تخلص.</p>
-      <form id="nameForm" hidden>
-        <input id="nameInput" maxlength="12" placeholder="اكتب اسمك" aria-label="اسمك">
-        <button class="primary" type="submit">سجّل</button>
-      </form>
-      <section id="boardBox" hidden>
-        <h3>أحسن الحسابات</h3>
-        <ol class="board" id="board"></ol>
-      </section>
-      <button class="primary" id="start" type="button">ابدأ الوردية</button>
+    <div id="errorBox" class="error-box hidden">
+      <strong>حصلت مشكلة في تشغيل اللعبة</strong>
+      <p id="errorText">تأكد من اتصال الإنترنت ثم أعد تحميل الصفحة.</p>
+      <button onclick="location.reload()">إعادة المحاولة</button>
     </div>
   </div>
 
-  <script src="audio.js"></script>
-  <script src="leaderboard.js"></script>
-  <script src="game.js"></script>
+  <script type="module" src="./game.js"></script>
 </body>
 </html>
