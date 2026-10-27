@@ -1,0 +1,7 @@
+{
+  "name": "m11-city-builder",
+  "version": "2.1.0",
+  "description": "3D browser city builder by M11 Development",
+  "license": "MIT",
+  "scripts": { "start": "npx serve ." }
+}
