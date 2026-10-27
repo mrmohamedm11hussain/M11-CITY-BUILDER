@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>نسختك القديمة: الغابة المسحورة | M11 Development</title>
+<meta name="description" content="لعبة ألغاز زمنية من تصميم M11 Development">
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div id="hud"><span id="wn"></span><span>المستوى <b id="lv">1</b></span><span>الجولة <b id="lp">1</b></span><div id="bar"><i id="fill"></i></div></div>
+  <div id="hint"></div>
+  <canvas id="c" width="800" height="440"></canvas>
+  <div id="pad"><div><button data-k="l">◀</button><button data-k="r">▶</button></div><button data-k="j">⤒ نطّة</button></div>
+  <div id="ctl"><button id="rs">↻ إعادة المستوى</button><button id="nx" class="main">▶ جولة جديدة</button></div>
+  <div id="brand">من تصميم <span>M11 Development</span> · المدير: <span>Mr. Mohamed Hussain</span></div>
+</div>
+<div class="ov" id="o1">
+  <h1>نسختك القديمة</h1>
+  <p>الغابة المسحورة: كل جولة بتتسجّل، ونسختك القديمة بتعيد حركتها وتفتحلك الأبواب. وصّل للبوابة المضيئة.</p>
+  <p>الحركة: الأسهم أو A/D · النطّ: W أو مسافة · على الموبايل استخدم الأزرار</p>
+  <div class="chars" id="chs"></div>
+  <button class="main" id="go">ادخل الغابة</button>
+  <div class="co">من تصميم <span>M11 Development</span><br>المدير: <span>Mr. Mohamed Hussain</span></div>
+</div>
+<div class="ov off" id="o2"><h1 id="t2">عدّيت!</h1><p id="p2"></p><button class="main" id="n2">المستوى اللي بعده</button></div>
+<script src="levels.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

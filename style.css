@@ -1,0 +1,26 @@
+:root{--bg:#07120e;--ink:#e8fff2;--dim:#8fb5a0;--cy:#7dffb0;--pk:#ffd24d;--line:#1f3a2c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Cairo',system-ui,sans-serif;overflow:hidden;touch-action:none}
+#app{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px}
+#hud{width:min(100%,800px);display:flex;align-items:center;gap:12px;font-size:15px}
+#hud b{font-family:'Lalezar','Cairo',sans-serif;font-weight:400;font-size:20px;color:var(--cy)}
+#wn{color:var(--dim)}
+#bar{flex:1;height:8px;background:var(--line);border-radius:6px;overflow:hidden}
+#bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--pk),var(--cy));transform-origin:right}
+#hint{width:min(100%,800px);text-align:center;font-size:15px;min-height:1.7em}
+canvas{width:min(100%,800px);aspect-ratio:800/440;border-radius:14px;border:1px solid var(--line);box-shadow:0 0 60px #7dffb018;background:#0b2a2a;touch-action:none}
+#ctl,#pad{width:min(100%,800px);display:flex;gap:10px;justify-content:space-between;align-items:center}
+#pad div{display:flex;gap:10px}
+#pad button{min-width:64px;height:54px;font-size:20px;user-select:none;touch-action:none}
+@media (hover:hover) and (pointer:fine){#pad{display:none}}
+button{font:inherit;font-weight:700;color:var(--ink);background:#10261c;border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer}
+button:hover,button:focus-visible{border-color:var(--cy);outline:none}
+button.main{background:var(--cy);color:#06140d;border-color:var(--cy)}
+#brand{font-size:12px;color:var(--dim);text-align:center}#brand span{color:var(--ink)}
+.ov{position:fixed;inset:0;background:#050e0af0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;z-index:5}
+.ov.off{display:none}
+.ov h1{font-family:'Lalezar','Cairo',sans-serif;font-weight:400;font-size:clamp(44px,11vw,84px);margin:0;line-height:1;background:linear-gradient(90deg,var(--cy),var(--pk));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ov p{margin:0;max-width:460px;color:var(--dim);line-height:1.8}
+.ov .co{font-size:13px;margin-top:10px;color:var(--dim)}.ov .co span{color:var(--ink)}
+.chars{display:flex;gap:10px}.ch{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 14px}.ch.on{border-color:var(--cy);background:#173424}
+.ch canvas{width:56px;height:64px;aspect-ratio:auto;border:0;box-shadow:none;background:none;border-radius:0}
