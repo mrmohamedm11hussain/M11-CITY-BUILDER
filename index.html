@@ -4,21 +4,49 @@
   <meta charset="UTF-8">
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
   <meta name="theme-color" content="#101916">
   <meta name="description" content="EL OSTTA - تجربة قيادة ميكروباص مصرية ثلاثية الأبعاد">
-  <title>EL OSTTA | الأسطى</title>
+
+  <title>EL OSTTA | الأسطى المصري</title>
+
   <link rel="stylesheet" href="./style.css">
+
+  <style>
+    #gameCanvas {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      z-index: 0 !important;
+    }
+
+    #hud {
+      z-index: 5;
+    }
+
+    #loading {
+      z-index: 20;
+    }
+
+    #errorBox {
+      z-index: 30;
+    }
+  </style>
 </head>
+
 <body>
   <div id="game">
+
     <div id="loading" class="loading">
       <div class="loading-logo">أ</div>
       <h1>EL OSTTA</h1>
-      <p>بنجهّز العربية يا أسطى...</p>
+      <p id="loadingText">بنجهّز العربية يا أسطى...</p>
       <div class="loading-track"><span></span></div>
     </div>
 
     <div id="hud" class="hud hidden">
+
       <header class="topbar">
         <div class="brand">
           <span class="brand-icon">أ</span>
@@ -27,6 +55,7 @@
             <small>الأسطى المصري</small>
           </div>
         </div>
+
         <div class="money">
           <span>الرصيد</span>
           <strong id="money">250 ج.م</strong>
@@ -36,13 +65,20 @@
       <section class="dashboard">
         <div class="speed-box">
           <span class="small-label">السرعة</span>
-          <div><strong id="speed">0</strong><span>كم/س</span></div>
+          <div>
+            <strong id="speed">0</strong>
+            <span>كم/س</span>
+          </div>
         </div>
+
         <div class="info-box">
           <span class="small-label">الوقود</span>
-          <div class="fuel-track"><span id="fuelBar"></span></div>
+          <div class="fuel-track">
+            <span id="fuelBar"></span>
+          </div>
           <strong id="fuelText">100%</strong>
         </div>
+
         <div class="gear-box">
           <span class="small-label">ناقل الحركة</span>
           <strong id="gear">N</strong>
@@ -53,39 +89,70 @@
         أهلاً يا أسطى! شغّل العربية وانطلق.
       </div>
 
-      <button id="cameraBtn" class="camera-btn">
-        <span>◉</span> تغيير الكاميرا
+      <button id="cameraBtn" class="camera-btn" type="button">
+        <span>◉</span> كاميرا داخلية
       </button>
 
       <div class="controls">
+
         <div class="steering">
-          <button class="control-btn steer" data-control="left" aria-label="لف شمال">◀</button>
-          <button class="control-btn steer" data-control="right" aria-label="لف يمين">▶</button>
+          <button class="control-btn steer"
+                  type="button"
+                  data-control="left"
+                  aria-label="لف شمال">◀</button>
+
+          <button class="control-btn steer"
+                  type="button"
+                  data-control="right"
+                  aria-label="لف يمين">▶</button>
         </div>
 
         <div class="pedals">
-          <button id="brakeBtn" class="control-btn brake" data-control="brake">
-            <span>▰</span><small>فرامل</small>
+          <button id="brakeBtn"
+                  class="control-btn brake"
+                  type="button"
+                  data-control="brake">
+            <span>▰</span>
+            <small>فرامل</small>
           </button>
-          <button id="gasBtn" class="control-btn gas" data-control="gas">
-            <span>▲</span><small>بنزين</small>
+
+          <button id="gasBtn"
+                  class="control-btn gas"
+                  type="button"
+                  data-control="gas">
+            <span>▲</span>
+            <small>بنزين</small>
           </button>
         </div>
+
       </div>
 
       <footer class="bottom-bar">
-        <button id="engineBtn" class="utility-btn">⏻ <span>تشغيل المحرك</span></button>
-        <div class="status"><i id="engineLight"></i><span id="engineStatus">المحرك متوقف</span></div>
+        <button id="engineBtn" class="utility-btn" type="button">
+          ⏻ <span>تشغيل المحرك</span>
+        </button>
+
+        <div class="status">
+          <i id="engineLight"></i>
+          <span id="engineStatus">المحرك متوقف</span>
+        </div>
       </footer>
+
     </div>
 
     <div id="errorBox" class="error-box hidden">
-      <strong>حصلت مشكلة في تشغيل اللعبة</strong>
-      <p id="errorText">تأكد من اتصال الإنترنت ثم أعد تحميل الصفحة.</p>
-      <button onclick="location.reload()">إعادة المحاولة</button>
+      <strong>تعذّر تشغيل اللعبة</strong>
+      <p id="errorText">
+        تأكد من اتصال الإنترنت ثم حاول مرة أخرى.
+      </p>
+      <button type="button" onclick="location.reload()">
+        إعادة المحاولة
+      </button>
     </div>
+
   </div>
 
+  <!-- تشغيل اللعبة -->
   <script type="module" src="./game.js"></script>
 </body>
 </html>
