@@ -10,6 +10,11 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.m
   // =====================================================
 
   const $ = id => document.getElementById(id);
+  const moneyLabel = $("money");
+const populationLabel = $("population");
+const buildingsLabel = $("buildings");
+const incomeLabel = $("income");
+const toast = $("toast");
   const SAVE_KEY = "M11_CITY_BUILDER_SAVE_V2";
   const CELL = 2;
   const SIZE = 24;
