@@ -6,12 +6,13 @@
     <title>YOUR OLD VERSION — حكاية مغامرة جديدة</title>
     <style>
         :root {
-            --bg-dark: #080c14;
+            --bg-dark: #05070d;
             --accent-cyan: #00f3ff;
             --accent-purple: #9d4edd;
+            --accent-crimson: #ff3366;
             --accent-gold: #ffb703;
             --text-main: #f8f9fa;
-            --panel-bg: rgba(15, 23, 42, 0.75);
+            --panel-bg: rgba(12, 18, 32, 0.85);
             --border-glow: rgba(0, 243, 255, 0.3);
         }
 
@@ -31,7 +32,6 @@
             color: var(--text-main);
         }
 
-        /* Ambient Canvas Background */
         #bgCanvas {
             position: absolute;
             top: 0;
@@ -41,7 +41,6 @@
             z-index: 1;
         }
 
-        /* Overlay Interface */
         .app-container {
             position: relative;
             z-index: 2;
@@ -51,81 +50,81 @@
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            background: radial-gradient(circle at center, transparent 30%, rgba(5, 7, 12, 0.85) 100%);
+            padding: 15px;
+            background: radial-gradient(circle at center, transparent 20%, rgba(3, 5, 10, 0.9) 100%);
         }
 
         header {
             text-align: center;
-            margin-top: 10px;
-        }
-
-        header h1 {
-            font-size: 2.2rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #fff;
-            text-shadow: 0 0 12px var(--accent-cyan);
-        }
-
-        header p {
-            font-size: 0.95rem;
-            color: #a0aec0;
             margin-top: 5px;
         }
 
-        /* World Selection & Game Hub */
+        header h1 {
+            font-size: 2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+            text-shadow: 0 0 15px var(--accent-cyan);
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        /* Main Hub */
         .main-card {
             background: var(--panel-bg);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(14px);
             border: 1px solid var(--border-glow);
             border-radius: 16px;
-            padding: 25px;
-            width: 90%;
+            padding: 20px;
+            width: 92%;
             max-width: 850px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-            transition: all 0.3s ease;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
         }
 
         .character-select {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-bottom: 25px;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
         .char-btn {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 12px 20px;
+            border-radius: 10px;
+            padding: 10px 18px;
             cursor: pointer;
             color: #fff;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             transition: 0.3s;
+            font-size: 0.9rem;
         }
 
         .char-btn.active, .char-btn:hover {
             border-color: var(--accent-cyan);
-            background: rgba(0, 243, 255, 0.15);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+            background: rgba(0, 243, 255, 0.12);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.25);
         }
 
-        /* World Grid */
+        /* Worlds Grid */
         .worlds-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
         }
 
         .world-card {
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 15px;
+            border-radius: 10px;
+            padding: 12px;
             text-align: center;
             cursor: pointer;
             position: relative;
@@ -134,7 +133,7 @@
         }
 
         .world-card:hover:not(.locked) {
-            transform: translateY(-5px);
+            transform: translateY(-4px);
             border-color: var(--accent-cyan);
         }
 
@@ -145,42 +144,68 @@
         }
 
         .world-card h3 {
-            font-size: 1.1rem;
-            margin-bottom: 8px;
+            font-size: 1rem;
+            margin-bottom: 6px;
             color: var(--accent-cyan);
         }
 
         .world-card p {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #cbd5e1;
         }
 
-        .world-card .status-badge {
-            font-size: 0.7rem;
-            margin-top: 10px;
+        .status-badge {
+            font-size: 0.65rem;
+            margin-top: 8px;
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 10px;
+            padding: 2px 6px;
+            border-radius: 8px;
             background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Discovery / Lore Overlay Box */
-        .lore-box {
-            margin-top: 20px;
-            background: rgba(0, 0, 0, 0.6);
+        /* Shadow Companion Dialogue Box */
+        .shadow-companion {
+            margin-top: 15px;
+            background: rgba(15, 5, 25, 0.8);
+            border: 1px solid rgba(157, 78, 221, 0.4);
             border-right: 3px solid var(--accent-purple);
-            padding: 12px 15px;
-            border-radius: 6px;
-            font-size: 0.88rem;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
             color: #e2e8f0;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            box-shadow: 0 0 20px rgba(157, 78, 221, 0.15);
+        }
+
+        .shadow-avatar {
+            font-size: 1.5rem;
+            animation: pulseShadow 2s infinite alternate;
+        }
+
+        @keyframes pulseShadow {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(1.15); opacity: 1; text-shadow: 0 0 10px var(--accent-purple); }
+        }
+
+        /* Active Hazard / Trap Alert Display */
+        .hazard-hud {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 51, 102, 0.1);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #ff80ab;
         }
 
         footer {
-            margin-bottom: 5px;
-            font-size: 0.8rem;
+            margin-bottom: 3px;
+            font-size: 0.75rem;
             color: #64748b;
         }
 
@@ -207,18 +232,15 @@
 </head>
 <body>
 
-    <!-- Particle Background -->
     <canvas id="bgCanvas"></canvas>
 
-    <!-- App Main Layout -->
     <div class="app-container">
         <header>
             <h1>YOUR OLD VERSION</h1>
-            <p>اختر شخصيتك واستكشف العوالم الأربعة الغامضة</p>
+            <p>حيث يتربص الظل وتتداخل العوالم القديمة</p>
         </header>
 
         <div class="main-card">
-            <!-- Character Choice -->
             <div class="character-select">
                 <button class="char-btn active" onclick="selectChar('adam', this)">
                     <span>🧭</span> آدم المستكشف
@@ -228,35 +250,43 @@
                 </button>
             </div>
 
-            <!-- Worlds Grid -->
-            <h4 style="margin-bottom: 12px; color: #94a3b8; font-weight: 400;">العوالم المتاحة:</h4>
+            <h4 style="margin-bottom: 8px; color: #94a3b8; font-weight: 400; font-size: 0.9rem;">عوالم الاستكشاف والتهديد:</h4>
             <div class="worlds-grid">
                 <div class="world-card" onclick="enterWorld(1)">
                     <h3>المحطة المهجورة</h3>
-                    <p>البداية الواقعية وأسرار المكان القديم</p>
+                    <p>بداية الأثر ومخلفات الماضي</p>
                     <span class="status-badge" style="color: #4ade80;">متاح للغوص</span>
                 </div>
                 <div class="world-card locked" id="world-2" onclick="enterWorld(2)">
                     <h3>أعماق الشبكة</h3>
-                    <p>فك الشفرات والاختراق الرقمي</p>
+                    <p>فخاخ رقمية وأطياف حارسة</p>
                     <span class="status-badge">🔒 مغلق</span>
                 </div>
                 <div class="world-card locked" id="world-3" onclick="enterWorld(3)">
                     <h3>المتاهة الزمنية</h3>
-                    <p>استكشاف الأروقة والمفاتيح</p>
+                    <p>مخلوقات الظل والممرات الضيقة</p>
                     <span class="status-badge">🔒 مغلق</span>
                 </div>
                 <div class="world-card locked" id="world-4" onclick="enterWorld(4)">
                     <h3>النقطة العمياء</h3>
-                    <p>كشف سر النسخة القديمة</p>
+                    <p>مواجهة النسخة القديمة الحقيقية</p>
                     <span class="status-badge">🔒 مغلق</span>
                 </div>
             </div>
 
-            <!-- Lore / Secret Hint -->
-            <div class="lore-box">
-                <span>🕵️‍♂️</span>
-                <span id="loreText">قرينة غامضة: "ابحث في المحطة المهجورة أولاً، هناك مفتاح تشفير مفقود..."</span>
+            <!-- Shadow Companion Message -->
+            <div class="shadow-companion">
+                <div class="shadow-avatar">👤</div>
+                <div>
+                    <strong style="color: var(--accent-purple);">الظل المرافق:</strong>
+                    <span id="shadowText">"أنا ظلّك الذي لا يفارقك.. احذر، الفخاخ تتشكل حيث تنعدم الإضاءة في المحطة."</span>
+                </div>
+            </div>
+
+            <!-- Hazard / Monster Alert HUD -->
+            <div class="hazard-hud">
+                <span>⚠️ تهديد بيئي نشط: <strong id="hazardName" style="color: #fff;">لا شيء قريب</strong></span>
+                <span id="trapStatus">الحالة: آمن حالياً</span>
             </div>
         </div>
 
@@ -265,28 +295,26 @@
         </footer>
     </div>
 
-    <!-- Rotate Device Notice -->
     <div class="portrait-alert">
         <div style="font-size: 3rem; margin-bottom: 10px;">📱↻</div>
         <h2>اقلب الموبايل بالعرض</h2>
-        <p style="color: #a0aec0; margin-top: 5px;">لتجربة استكشاف واقعية وغامضة أفضل</p>
+        <p style="color: #a0aec0; margin-top: 5px;">لتجنب الفخاخ ومراقبة حركة الظل بدقة</p>
     </div>
 
     <script>
-        // Game State & Progress
         let gameState = {
             character: 'adam',
             unlockedWorlds: [1],
-            currentWorld: 1
+            currentWorld: 1,
+            shadowTrust: 50
         };
 
-        // Load Saved Data
-        if (localStorage.getItem('m11_game_progress')) {
+        if (localStorage.getItem('m11_game_v2')) {
             try {
-                gameState = JSON.parse(localStorage.getItem('m11_game_progress'));
+                gameState = JSON.parse(localStorage.getItem('m11_game_v2'));
                 updateUIProgress();
             } catch (e) {
-                console.log('Error loading progress');
+                console.log('Error loading save');
             }
         }
 
@@ -294,33 +322,52 @@
             gameState.character = name;
             document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            saveProgress();
+            saveGame();
         }
+
+        const worldData = {
+            1: {
+                shadowMsg: "المحطة هادئة.. لكن عيون الحراس الآليين البسيطة تراقب خطواتك.",
+                hazard: "حارس آلي تالف (صوت خطوات خافتة)",
+                trap: "فخ سلك مكهرب أرضي"
+            },
+            2: {
+                shadowMsg: "أعماق الشبكة مليئة بالحزم الضوئية القاتلة.. لا تهسر تركيزك.",
+                hazard: "طيف برمجى متسلل",
+                trap: "جدار حماية ليزري مفاجئ"
+            },
+            3: {
+                shadowMsg: "المتاهة تتشكل من جديد! المخلوقات هنا تشبه نسختك القديمة بالضبط..",
+                hazard: "وحش الظل الزاحف",
+                trap: "حفرة جاذبية زمنية"
+            },
+            4: {
+                shadowMsg: "لقد وصلنا للنهاية.. أنا وأنت والنسخة القديمة وجهاً لوجه.",
+                hazard: "النسخة القديمة المتمردة",
+                trap: "فخ الذاكرة المفقودة"
+            }
+        };
 
         function enterWorld(worldNum) {
             if (!gameState.unlockedWorlds.includes(worldNum)) {
-                alert("هذا العالم مغلق! يجب عليك إنهاء المرحلة السابقة أولاً لتفكيك الشفرة.");
+                alert("هذا العالم مقفل! أكمل العالم السابق وتجاوز فخاخه أولاً.");
                 return;
             }
-            
-            gameState.currentWorld = worldNum;
-            saveProgress();
 
-            // World Specific Hint
-            const hints = {
-                1: 'أنت الآن في المحطة المهجورة. تحقق من أجهزة التحكم القديمة...',
-                2: 'أعماق الشبكة: قم بفك التشفير لتجاوز جدار الحماية...',
-                3: 'المتاهة الزمنية: اختر المسار الأيمن للوصول للبوابة...',
-                4: 'النقطة العمياء: لقد وصلت لسر Your Old Version الحقيقي!'
-            };
-            
-            document.getElementById('loreText').innerText = hints[worldNum];
-            
-            // Simulating unlocking next world for exploration demo
+            gameState.currentWorld = worldNum;
+            saveGame();
+
+            // Update Shadow Dialogue and Hazards
+            const currentInfo = worldData[worldNum];
+            document.getElementById('shadowText').innerText = `"${currentInfo.shadowMsg}"`;
+            document.getElementById('hazardName').innerText = currentInfo.hazard;
+            document.getElementById('trapStatus').innerText = `التنبيه: ${currentInfo.trap}`;
+
+            // Unlock next world for progressive exploration
             if (worldNum + 1 <= 4 && !gameState.unlockedWorlds.includes(worldNum + 1)) {
                 gameState.unlockedWorlds.push(worldNum + 1);
                 updateUIProgress();
-                saveProgress();
+                saveGame();
             }
         }
 
@@ -338,11 +385,11 @@
             });
         }
 
-        function saveProgress() {
-            localStorage.setItem('m11_game_progress', JSON.stringify(gameState));
+        function saveGame() {
+            localStorage.setItem('m11_game_v2', JSON.stringify(gameState));
         }
 
-        /* --- Dynamic Canvas Background Engine --- */
+        /* --- Advanced Ambient Canvas with Fog & Shadow Particles --- */
         const canvas = document.getElementById('bgCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -354,17 +401,15 @@
         resizeCanvas();
 
         const particles = [];
-        const particleCount = 65;
-
-        for (let i = 0; i < particleCount; i++) {
+        for (let i = 0; i < 75; i++) {
             particles.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
-                radius: Math.random() * 2 + 0.5,
-                color: Math.random() > 0.5 ? '#00f3ff' : '#9d4edd',
-                vx: (Math.random() - 0.5) * 0.6,
-                vy: (Math.random() - 0.5) * 0.6,
-                alpha: Math.random() * 0.6 + 0.2
+                radius: Math.random() * 2.2 + 0.5,
+                color: Math.random() > 0.6 ? '#9d4edd' : (Math.random() > 0.3 ? '#00f3ff' : '#ff3366'),
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: (Math.random() - 0.5) * 0.4,
+                alpha: Math.random() * 0.5 + 0.1
             });
         }
 
