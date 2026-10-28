@@ -1,1560 +1,1813 @@
 "use strict";
 
 (() => {
-const $ = (id) => document.getElementById(id);
+  const $ = id => document.getElementById(id);
+  const canvas = $("game-canvas");
+  const ctx = canvas.getContext("2d");
 
-const canvas = $("game-canvas");
-const ctx = canvas.getContext("2d");
+  const TOTAL_LEVELS = 60;
+  const LEVELS_PER_WORLD = 10;
 
-const screens = {
-loading: $("loading-screen"),
-menu: $("main-menu"),
-play: $("play-screen"),
-worlds: $("worlds-screen"),
-settings: $("settings-screen")
-};
+  const WORLDS = [
+    {
+      name: "رمال مصر القديمة",
+      sky: ["#66b7d0", "#f1d09a"],
+      ground: "#c49a63",
+      grass: "#75864a",
+      stone: "#b9a17c",
+      dark: "#795638",
+      accent: "#f4cf77",
+      enemy: "mummy"
+    },
+    {
+      name: "معبد الأسرار",
+      sky: ["#446f7d", "#c4a578"],
+      ground: "#9b7854",
+      grass: "#61714b",
+      stone: "#d0b38a",
+      dark: "#604a36",
+      accent: "#f3cf78",
+      enemy: "guardian"
+    },
+    {
+      name: "أعماق الأهرامات",
+      sky: ["#161d39", "#58425b"],
+      ground: "#51464c",
+      grass: "#71634b",
+      stone: "#82756b",
+      dark: "#302d39",
+      accent: "#a9a0ff",
+      enemy: "mummy"
+    },
+    {
+      name: "وادي الفراعنة",
+      sky: ["#b66d55", "#f1c18a"],
+      ground: "#b28a63",
+      grass: "#6e7747",
+      stone: "#c1a17a",
+      dark: "#76513d",
+      accent: "#ffe18a",
+      enemy: "guardian"
+    },
+    {
+      name: "المدينة المفقودة",
+      sky: ["#244b61", "#789e9b"],
+      ground: "#776a58",
+      grass: "#58734f",
+      stone: "#b4ad8b",
+      dark: "#46473f",
+      accent: "#76f0df",
+      enemy: "phantom"
+    },
+    {
+      name: "قلعة الظلال",
+      sky: ["#17182c", "#654050"],
+      ground: "#4b3e4b",
+      grass: "#665044",
+      stone: "#85717c",
+      dark: "#292332",
+      accent: "#e4a4ff",
+      enemy: "guardian"
+    }
+  ];
 
-const overlays = {
-pause: $("pause-screen"),
-result: $("result-screen"),
-gameOver: $("game-over-screen")
-};
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const random = (a, b) => a + Math.random() * (b - a);
 
-const WORLD_NAMES = [
-"رمال مصر القديمة",
-"معبد الأسرار",
-"أعماق الأهرامات",
-"وادي الفراعنة",
-"المدينة المفقودة",
-"قلعة الظلال"
-];
-
-const WORLD_DESCRIPTIONS = [
-"ابدأ رحلتك بين الرمال والأطلال القديمة.",
-"اكتشف أسرار المعبد وتجنب المومياوات.",
-"استكشف الممرات العميقة داخل الأهرامات.",
-"واجه التماثيل والألغاز الفرعونية.",
-"ابحث عن المدينة التي اختفت من الخرائط.",
-"واجه التحدي الأخير واكتشف سر الظل."
-];
-
-const TOTAL_WORLDS = 6;
-const LEVELS_PER_WORLD = 10;
-const TOTAL_LEVELS = TOTAL_WORLDS * LEVELS_PER_WORLD;
-
-const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-
-const rand = (min, max) => Math.random() * (max - min) + min;
-
-function arabicNumber(value) {
-return Math.floor(value).toLocaleString("ar-EG");
-}
-
-function loadSave() {
-const fallback = {
-coins: 0,
-unlockedLevel: 1,
-sound: true,
-screenShake: true
-};
-
-try {
-  const parsed = JSON.parse(
-    localStorage.getItem("m11_old_version_save") || "null"
-  );
-
-  if (!parsed || typeof parsed !== "object") return fallback;
-
-  return {
-    ...fallback,
-    coins: Math.max(0, Number(parsed.coins) || 0),
-    unlockedLevel: clamp(
-      Math.floor(Number(parsed.unlockedLevel) || 1),
-      1,
-      TOTAL_LEVELS
-    ),
-    sound: parsed.sound !== false,
-    screenShake: parsed.screenShake !== false
-  };
-} catch {
-  return fallback;
-}
-
-}
-
-let save = loadSave();
-
-let currentLevel = 1;
-let gameRunning = false;
-let paused = false;
-let finished = false;
-
-let width = 960;
-let height = 540;
-let pixelRatio = 1;
-
-let cameraX = 0;
-let cameraY = 0;
-let screenShake = 0;
-
-let lastFrame = 0;
-let animationFrame = 0;
-let lastShadowMessage = 0;
-let audioContext = null;
-
-const input = {
-left: false,
-right: false,
-jump: false,
-jumpPressed: false
-};
-
-const game = {
-gravity: 1700,
-groundY: 0,
-worldWidth: 4200,
-platforms: [],
-coins: [],
-enemies: [],
-decorations: [],
-particles: [],
-exit: null,
-player: null
-};
-
-function persist() {
-try {
-localStorage.setItem(
-"m11_old_version_save",
-JSON.stringify(save)
-);
-} catch {
-// اللعبة تظل قابلة للعب إذا كان التخزين غير متاح.
-}
-}
-
-function showScreen(name) {
-Object.entries(screens).forEach(([key, element]) => {
-element.classList.toggle("hidden", key !== name);
-});
-}
-
-function hideOverlays() {
-Object.values(overlays).forEach((element) => {
-element.classList.add("hidden");
-});
-}
-
-function setShadowMessage(message, force = false) {
-const now = performance.now();
-
-if (!force && now - lastShadowMessage < 2200) return;
-
-lastShadowMessage = now;
-$("shadow-text").textContent = message;
-
-const box = $("shadow-message");
-
-box.animate(
-  [
-    { opacity: 0.4, transform: "translateY(5px)" },
-    { opacity: 1, transform: "translateY(0)" }
-  ],
-  { duration: 180, easing: "ease-out" }
-);
-
-}
-
-function playTone(frequency = 440, duration = 0.07, type = "sine") {
-if (!save.sound) return;
-
-try {
-  const AudioContextClass =
-    window.AudioContext || window.webkitAudioContext;
-
-  if (!AudioContextClass) return;
-
-  audioContext ||= new AudioContextClass();
-
-  if (audioContext.state === "suspended") {
-    audioContext.resume();
+  function ar(n) {
+    return Math.floor(n).toLocaleString("ar-EG");
   }
 
-  const oscillator = audioContext.createOscillator();
-  const gain = audioContext.createGain();
-
-  oscillator.type = type;
-  oscillator.frequency.value = frequency;
-
-  gain.gain.setValueAtTime(0.045, audioContext.currentTime);
-  gain.gain.exponentialRampToValueAtTime(
-    0.001,
-    audioContext.currentTime + duration
-  );
-
-  oscillator.connect(gain);
-  gain.connect(audioContext.destination);
-
-  oscillator.start();
-  oscillator.stop(audioContext.currentTime + duration);
-} catch {
-  // الصوت اختياري.
-}
-
-}
-
-function resizeCanvas() {
-const rect = canvas.getBoundingClientRect();
-
-if (!rect.width || !rect.height) return;
-
-width = rect.width;
-height = rect.height;
-
-pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-
-canvas.width = Math.round(width * pixelRatio);
-canvas.height = Math.round(height * pixelRatio);
-
-ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-
-if (game.player) {
-  game.player.y = Math.min(
-    game.player.y,
-    Math.max(0, height - game.player.h)
-  );
-}
-
-}
-
-function worldForLevel(level) {
-return Math.floor((level - 1) / LEVELS_PER_WORLD);
-}
-
-function levelInWorld(level) {
-return ((level - 1) % LEVELS_PER_WORLD) + 1;
-}
-
-function createPlayer() {
-return {
-x: 70,
-y: 0,
-w: 32,
-h: 45,
-vx: 0,
-vy: 0,
-speed: 260,
-jumpPower: 650,
-onGround: false,
-facing: 1,
-invulnerable: 0,
-walkTime: 0,
-lives: 3,
-spawnX: 70,
-spawnY: 0
-};
-}
-
-function addPlatform(x, y, w, h, type = "stone") {
-game.platforms.push({ x, y, w, h, type });
-}
-
-function addCoin(x, y) {
-game.coins.push({
-x,
-y,
-r: 10,
-collected: false,
-phase: rand(0, Math.PI * 2)
-});
-}
-
-function addEnemy(x, y, type = "mummy", minX = x - 80, maxX = x + 80) {
-game.enemies.push({
-x,
-y,
-w: 32,
-h: 38,
-vx: 42,
-minX,
-maxX,
-type,
-alive: true,
-phase: rand(0, Math.PI * 2)
-});
-}
-
-function buildLevel(level) {
-const worldIndex = worldForLevel(level);
-
-game.worldWidth = 4200 + (level - 1) * 60;
-game.groundY = height - Math.max(60, height * 0.16);
-
-game.platforms = [];
-game.coins = [];
-game.enemies = [];
-game.decorations = [];
-game.particles = [];
-game.exit = null;
-
-const groundY = game.groundY;
-
-// الأرض الرئيسية مقسمة حتى يمكن إنشاء فجوات حقيقية.
-let x = 0;
-
-while (x < game.worldWidth) {
-  const sectionWidth = rand(300, 560);
-  const gapWidth = level >= 3 ? rand(45, 85) : 0;
-
-  addPlatform(
-    x,
-    groundY,
-    Math.min(sectionWidth, game.worldWidth - x),
-    height - groundY + 140,
-    "ground"
-  );
-
-  if (gapWidth > 0 && x + sectionWidth < game.worldWidth - 250) {
-    x += sectionWidth + gapWidth;
-  } else {
-    x += sectionWidth;
+  function worldIndex(level) {
+    return Math.floor((level - 1) / LEVELS_PER_WORLD);
   }
-}
 
-// منصات علوية وسلالم.
-const platformCount = 15 + Math.min(level, 15);
+  function levelIndex(level) {
+    return ((level - 1) % LEVELS_PER_WORLD) + 1;
+  }
 
-for (let i = 0; i < platformCount; i++) {
-  const px = 220 + i * 230 + rand(-45, 45);
-  const py = groundY - rand(85, Math.min(height * 0.48, 220));
-  const pw = rand(85, 155);
+  function loadSave() {
+    const defaults = {
+      coins: 0,
+      unlockedLevel: 1,
+      sound: true,
+      screenShake: true
+    };
 
-  if (px + pw < game.worldWidth - 150) {
-    addPlatform(px, py, pw, 20, i % 3 === 0 ? "ruins" : "stone");
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("m11_old_version_save") || "null"
+      );
 
-    if (i % 2 === 0) {
-      addCoin(px + pw / 2, py - 27);
+      if (!saved || typeof saved !== "object") return defaults;
+
+      return {
+        coins: Math.max(0, Number(saved.coins) || 0),
+        unlockedLevel: clamp(
+          Math.floor(Number(saved.unlockedLevel) || 1),
+          1,
+          TOTAL_LEVELS
+        ),
+        sound: saved.sound !== false,
+        screenShake: saved.screenShake !== false
+      };
+    } catch {
+      return defaults;
     }
   }
-}
 
-// سلالم خشبية وحجرية.
-for (let i = 0; i < 8; i++) {
-  const sx = 390 + i * 470;
-  const sy = groundY - 100 - (i % 3) * 28;
-
-  game.decorations.push({
-    type: "ladder",
-    x: sx,
-    y: sy,
-    w: 36,
-    h: 100 + (i % 3) * 28,
-    broken: (i + level) % 3 === 0
-  });
-}
-
-// جنيهات منتشرة فوق الأرض وعلى المسار.
-for (let i = 0; i < 46; i++) {
-  const cx = 180 + i * 84;
-
-  if (cx < game.worldWidth - 150) {
-    addCoin(cx, groundY - 35 - (i % 3) * 15);
-  }
-}
-
-// الأعداء.
-const enemyCount = 5 + Math.min(level, 12);
-
-for (let i = 0; i < enemyCount; i++) {
-  const ex = 520 + i * 310;
-
-  if (ex < game.worldWidth - 200) {
-    const ey = groundY - 38;
-    addEnemy(
-      ex,
-      ey,
-      worldIndex >= 4 && i % 3 === 0 ? "guardian" : "mummy",
-      ex - 55,
-      ex + 85
-    );
-  }
-}
-
-// زخارف مصرية.
-for (let i = 0; i < 40; i++) {
-  game.decorations.push({
-    type: ["palm", "pyramid", "pillar", "rock"][i % 4],
-    x: i * 125 + rand(0, 50),
-    y: groundY,
-    size: rand(0.65, 1.35)
-  });
-}
-
-// نقطة النهاية.
-game.exit = {
-  x: game.worldWidth - 110,
-  y: groundY - 92,
-  w: 46,
-  h: 92
-};
-
-game.player = createPlayer();
-game.player.y = groundY - game.player.h;
-game.player.spawnY = game.player.y;
-
-cameraX = 0;
-cameraY = 0;
-screenShake = 0;
-
-finished = false;
-
-$("world-name").textContent = WORLD_NAMES[worldIndex];
-$("level-name").textContent =
-  "المستوى " +
-  arabicNumber(worldIndex + 1) +
-  " - " +
-  arabicNumber(levelInWorld(level));
-
-updateHUD();
-renderWorldCards();
-
-setShadowMessage(
-  level === 1
-    ? "أهلًا يا أنطونيو! اتبع الطريق، واجمع الجنيهات. سأحذرك من الأخطار!"
-    : "مستوى جديد! خليك حذر، فالآثار تخفي أسرارًا كثيرة.",
-  true
-);
-
-}
-
-function updateHUD() {
-$("coin-count").textContent = arabicNumber(save.coins);
-$("life-count").textContent = arabicNumber(
-game.player ? game.player.lives : 3
-);
-}
-
-function renderWorldCards() {
-const container = $("world-list");
-container.replaceChildren();
-
-for (let world = 0; world < TOTAL_WORLDS; world++) {
-  const firstLevel = world * LEVELS_PER_WORLD + 1;
-  const lastLevel = firstLevel + LEVELS_PER_WORLD - 1;
-  const unlocked = save.unlockedLevel >= firstLevel;
-
-  const card = document.createElement("article");
-  card.className = "world-card " + (unlocked ? "unlocked" : "locked");
-
-  const title = document.createElement("strong");
-  title.textContent = "العالم " + arabicNumber(world + 1);
-
-  const name = document.createElement("span");
-  name.textContent = WORLD_NAMES[world];
-
-  const description = document.createElement("span");
-  description.textContent = WORLD_DESCRIPTIONS[world];
-
-  const progress = document.createElement("span");
-  progress.textContent =
-    "المستويات " +
-    arabicNumber(firstLevel) +
-    "–" +
-    arabicNumber(lastLevel);
-
-  const button = document.createElement("button");
-  button.type = "button";
-  button.textContent = unlocked ? "دخول العالم" : "مغلق";
-
-  button.disabled = !unlocked;
-
-  button.addEventListener("click", () => {
-    const level = Math.max(
-      firstLevel,
-      Math.min(save.unlockedLevel, lastLevel)
-    );
-
-    startLevel(level);
-  });
-
-  card.append(title, name, description, progress, button);
-  container.appendChild(card);
-}
-
-}
-
-function startLevel(level) {
-currentLevel = clamp(Math.floor(level), 1, TOTAL_LEVELS);
-
-hideOverlays();
-showScreen("play");
-
-paused = false;
-gameRunning = true;
-
-resizeCanvas();
-buildLevel(currentLevel);
-
-lastFrame = performance.now();
-cancelAnimationFrame(animationFrame);
-
-animationFrame = requestAnimationFrame(loop);
-
-}
-
-function pauseGame() {
-if (!gameRunning || paused || finished) return;
-
-paused = true;
-overlays.pause.classList.remove("hidden");
-
-}
-
-function resumeGame() {
-if (finished) return;
-
-hideOverlays();
-paused = false;
-lastFrame = performance.now();
-
-animationFrame = requestAnimationFrame(loop);
-
-}
-
-function goHome() {
-gameRunning = false;
-paused = false;
-finished = false;
-
-cancelAnimationFrame(animationFrame);
-hideOverlays();
-showScreen("menu");
-
-renderWorldCards();
-
-}
-
-function restartLevel() {
-startLevel(currentLevel);
-}
-
-function completeLevel() {
-if (finished) return;
-
-finished = true;
-gameRunning = false;
-
-const next = Math.min(TOTAL_LEVELS, currentLevel + 1);
-
-save.unlockedLevel = Math.max(save.unlockedLevel, next);
-persist();
-
-playTone(660, 0.12);
-setTimeout(() => playTone(880, 0.18), 100);
-
-$("result-title").textContent =
-  currentLevel === TOTAL_LEVELS
-    ? "لقد أنهيت المغامرة!"
-    : "أحسنت يا أنطونيو!";
-
-$("result-text").textContent =
-  currentLevel === TOTAL_LEVELS
-    ? "لقد كشفت أسرار مصر القديمة وأكملت المستويات الستين!"
-    : "أنهيت المستوى " +
-      arabicNumber(currentLevel) +
-      " بنجاح. استعد لاكتشاف منطقة جديدة.";
-
-$("next-level-button").textContent =
-  currentLevel === TOTAL_LEVELS
-    ? "العودة إلى القائمة"
-    : "المستوى التالي";
-
-overlays.result.classList.remove("hidden");
-
-}
-
-function gameOver() {
-gameRunning = false;
-finished = true;
-
-overlays.gameOver.classList.remove("hidden");
-
-}
-
-function loseLife() {
-const p = game.player;
-
-if (p.invulnerable > 0) return;
-
-p.lives--;
-p.invulnerable = 1.5;
-
-updateHUD();
-
-if (save.screenShake) screenShake = 8;
-
-playTone(140, 0.16, "sawtooth");
-
-if (p.lives <= 0) {
-  gameOver();
-  return;
-}
-
-p.x = p.spawnX;
-p.y = p.spawnY;
-p.vx = 0;
-p.vy = 0;
-
-setShadowMessage(
-  "خلي بالك يا أنطونيو! لسه عندك " +
-    arabicNumber(p.lives) +
-    " محاولات.",
-  true
-);
-
-}
-
-function collectCoin(coin) {
-if (coin.collected) return;
-
-coin.collected = true;
-save.coins += 1;
-
-updateHUD();
-persist();
-
-playTone(790, 0.055);
-
-}
-
-function createParticle(x, y, color) {
-game.particles.push({
-x,
-y,
-vx: rand(-80, 80),
-vy: rand(-140, -30),
-life: rand(0.25, 0.5),
-maxLife: 0.5,
-color,
-size: rand(2, 5)
-});
-}
-
-function updateParticles(dt) {
-for (let i = game.particles.length - 1; i >= 0; i--) {
-const particle = game.particles[i];
-
-  particle.life -= dt;
-  particle.x += particle.vx * dt;
-  particle.y += particle.vy * dt;
-  particle.vy += 300 * dt;
-
-  if (particle.life <= 0) {
-    game.particles.splice(i, 1);
-  }
-}
-
-}
-
-function overlaps(a, b) {
-return (
-a.x < b.x + b.w &&
-a.x + a.w > b.x &&
-a.y < b.y + b.h &&
-a.y + a.h > b.y
-);
-}
-
-function update(dt) {
-const p = game.player;
-
-if (!p) return;
-
-dt = Math.min(dt, 0.033);
-
-p.invulnerable = Math.max(0, p.invulnerable - dt);
-
-// الحركة الأفقية.
-const direction = (input.right ? 1 : 0) - (input.left ? 1 : 0);
-
-p.vx = direction * p.speed;
-
-if (direction !== 0) {
-  p.facing = direction;
-  p.walkTime += dt * 12;
-}
-
-if (input.jumpPressed && p.onGround) {
-  p.vy = -p.jumpPower;
-  p.onGround = false;
-
-  playTone(330, 0.07);
-}
-
-input.jumpPressed = false;
-
-// الجاذبية والحركة الرأسية.
-p.vy += game.gravity * dt;
-
-p.x += p.vx * dt;
-p.x = clamp(p.x, 0, game.worldWidth - p.w);
-
-const oldY = p.y;
-
-p.y += p.vy * dt;
-p.onGround = false;
-
-// التصادم مع المنصات أثناء السقوط.
-if (p.vy >= 0) {
-  for (const platform of game.platforms) {
-    const horizontalOverlap =
-      p.x + p.w > platform.x &&
-      p.x < platform.x + platform.w;
-
-    const crossedTop =
-      oldY + p.h <= platform.y &&
-      p.y + p.h >= platform.y;
-
-    if (horizontalOverlap && crossedTop) {
-      p.y = platform.y - p.h;
-      p.vy = 0;
-      p.onGround = true;
-
-      if (platform.type === "ground") {
-        p.spawnX = Math.max(0, platform.x + 15);
-        p.spawnY = p.y;
-      }
-
-      break;
-    }
-  }
-}
-
-// التقاط العملات.
-for (const coin of game.coins) {
-  if (coin.collected) continue;
-
-  const box = {
-    x: coin.x - coin.r,
-    y: coin.y - coin.r,
-    w: coin.r * 2,
-    h: coin.r * 2
+  let save = loadSave();
+
+  let W = 960;
+  let H = 540;
+  let DPR = 1;
+
+  let level = 1;
+  let cameraX = 0;
+  let cameraY = 0;
+
+  let running = false;
+  let paused = false;
+  let finished = false;
+
+  let raf = 0;
+  let lastTime = 0;
+  let audio = null;
+  let shake = 0;
+  let lastWarning = 0;
+
+  const input = {
+    left: false,
+    right: false,
+    jump: false,
+    jumpPressed: false
   };
 
-  if (overlaps(p, box)) {
-    collectCoin(coin);
+  const world = {
+    width: 4600,
+    groundY: 0,
+    platforms: [],
+    coins: [],
+    enemies: [],
+    decorations: [],
+    particles: [],
+    exit: null,
+    player: null
+  };
 
-    for (let i = 0; i < 5; i++) {
-      createParticle(coin.x, coin.y, "#ffd76a");
+  function persist() {
+    try {
+      localStorage.setItem(
+        "m11_old_version_save",
+        JSON.stringify(save)
+      );
+    } catch {}
+  }
+
+  function showScreen(name) {
+    ["loading", "menu", "play", "worlds", "settings"].forEach(key => {
+      const el = ({
+        loading: $("loading-screen"),
+        menu: $("main-menu"),
+        play: $("play-screen"),
+        worlds: $("worlds-screen"),
+        settings: $("settings-screen")
+      })[key];
+
+      el.classList.toggle("hidden", key !== name);
+    });
+  }
+
+  function hideOverlays() {
+    [
+      "pause-screen",
+      "result-screen",
+      "game-over-screen"
+    ].forEach(id => $(id).classList.add("hidden"));
+  }
+
+  function message(text, force = false) {
+    const now = performance.now();
+
+    if (!force && now - lastWarning < 2600) return;
+
+    lastWarning = now;
+    $("shadow-text").textContent = text;
+
+    $("shadow-message").animate(
+      [
+        { opacity: 0.5, transform: "translateY(5px)" },
+        { opacity: 1, transform: "translateY(0)" }
+      ],
+      { duration: 220 }
+    );
+  }
+
+  function tone(freq = 440, duration = 0.07) {
+    if (!save.sound) return;
+
+    try {
+      const Audio = window.AudioContext || window.webkitAudioContext;
+      if (!Audio) return;
+
+      audio ||= new Audio();
+
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+
+      osc.type = "sine";
+      osc.frequency.value = freq;
+
+      gain.gain.setValueAtTime(0.045, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        audio.currentTime + duration
+      );
+
+      osc.connect(gain);
+      gain.connect(audio.destination);
+
+      osc.start();
+      osc.stop(audio.currentTime + duration);
+    } catch {}
+  }
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    W = rect.width;
+    H = rect.height;
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    if (world.player && world.player.y > world.groundY) {
+      world.player.y = world.groundY - world.player.h;
     }
   }
-}
 
-// حركة الأعداء والتصادم معهم.
-for (const enemy of game.enemies) {
-  if (!enemy.alive) continue;
-
-  enemy.x += enemy.vx * dt;
-
-  if (enemy.x <= enemy.minX || enemy.x >= enemy.maxX) {
-    enemy.vx *= -1;
+  function makePlayer() {
+    return {
+      x: 70,
+      y: 0,
+      w: 34,
+      h: 49,
+      vx: 0,
+      vy: 0,
+      speed: 275,
+      jumpPower: 650,
+      grounded: false,
+      facing: 1,
+      lives: 3,
+      invulnerable: 0,
+      walk: 0,
+      spawnX: 70,
+      spawnY: 0
+    };
   }
 
-  enemy.y =
-    game.groundY - enemy.h +
-    Math.sin(performance.now() / 350 + enemy.phase) * 1.5;
+  function platform(x, y, w, h, type = "stone") {
+    world.platforms.push({ x, y, w, h, type });
+  }
 
-  if (overlaps(p, enemy)) {
-    const playerBottom = p.y + p.h;
-    const enemyTop = enemy.y;
+  function coin(x, y) {
+    world.coins.push({
+      x, y,
+      r: 12,
+      collected: false,
+      phase: random(0, 6)
+    });
+  }
 
-    if (p.vy > 80 && playerBottom - enemyTop < 20) {
-      enemy.alive = false;
-      p.vy = -390;
+  function enemy(x, type, minX, maxX) {
+    world.enemies.push({
+      x,
+      y: world.groundY - 42,
+      w: 35,
+      h: 42,
+      vx: random(40, 60),
+      minX,
+      maxX,
+      type,
+      alive: true,
+      phase: random(0, 6)
+    });
+  }
 
-      for (let i = 0; i < 9; i++) {
-        createParticle(
-          enemy.x + enemy.w / 2,
-          enemy.y + enemy.h / 2,
-          "#d8c6a3"
-        );
+  function buildLevel(n) {
+    level = clamp(n, 1, TOTAL_LEVELS);
+
+    const wi = worldIndex(level);
+    const theme = WORLDS[wi];
+
+    world.width = 4600 + level * 35;
+    world.groundY = H - Math.max(65, H * 0.16);
+
+    world.platforms = [];
+    world.coins = [];
+    world.enemies = [];
+    world.decorations = [];
+    world.particles = [];
+
+    const gy = world.groundY;
+
+    // الأرض مع فجوات متفاوتة.
+    let x = 0;
+    let section = 0;
+
+    while (x < world.width) {
+      const length = random(340, 530);
+      const gap = level >= 3 && section % 3 === 1
+        ? random(65, 100)
+        : 0;
+
+      platform(
+        x,
+        gy,
+        Math.min(length, world.width - x),
+        H - gy + 150,
+        "ground"
+      );
+
+      x += length + gap;
+      section++;
+    }
+
+    // منصات حجرية موزعة على ارتفاعات مختلفة.
+    const count = 18 + Math.min(level, 14);
+
+    for (let i = 0; i < count; i++) {
+      const px = 230 + i * 225 + random(-30, 30);
+      const py = gy - random(90, Math.min(H * 0.46, 225));
+      const pw = random(90, 160);
+
+      if (px + pw < world.width - 150) {
+        platform(px, py, pw, 22, i % 3 === 0 ? "ruins" : "stone");
+
+        if (i % 2 === 0) {
+          coin(px + pw / 2, py - 30);
+        }
+      }
+    }
+
+    // سلالم متضررة وآثار.
+    for (let i = 0; i < 12; i++) {
+      const sx = 260 + i * 355;
+      const sh = random(80, 150);
+
+      world.decorations.push({
+        type: "ladder",
+        x: sx,
+        y: gy,
+        h: sh,
+        broken: (i + level) % 3 === 0
+      });
+    }
+
+    // العملات.
+    for (let i = 0; i < 54; i++) {
+      const cx = 170 + i * 81;
+
+      if (cx < world.width - 140) {
+        coin(cx, gy - 36 - (i % 3) * 20);
+      }
+    }
+
+    // أعداء يختلف شكلهم حسب العالم.
+    for (let i = 0; i < 7 + Math.min(level, 12); i++) {
+      const ex = 560 + i * 300;
+
+      if (ex < world.width - 180) {
+        let type = theme.enemy;
+
+        if (wi === 0 && i % 3 === 0) type = "scarab";
+        if (wi === 1 && i % 2 === 0) type = "guardian";
+        if (wi === 2 && i % 3 === 0) type = "phantom";
+        if (wi === 3 && i % 2 === 0) type = "guardian";
+        if (wi === 4 && i % 2 === 0) type = "phantom";
+        if (wi === 5) type = i % 2 ? "guardian" : "phantom";
+
+        enemy(ex, type, ex - 70, ex + 90);
+      }
+    }
+
+    // زخارف الخلفية.
+    const decoTypes = ["palm", "pillar", "obelisk", "ruin", "rock"];
+
+    for (let i = 0; i < 90; i++) {
+      world.decorations.push({
+        type: decoTypes[(i + wi) % decoTypes.length],
+        x: i * 62 + random(0, 35),
+        y: gy,
+        scale: random(0.65, 1.25),
+        phase: random(0, 6)
+      });
+    }
+
+    world.exit = {
+      x: world.width - 115,
+      y: gy - 100,
+      w: 54,
+      h: 100
+    };
+
+    world.player = makePlayer();
+    world.player.y = gy - world.player.h;
+    world.player.spawnY = world.player.y;
+
+    cameraX = 0;
+    cameraY = 0;
+    shake = 0;
+    finished = false;
+
+    $("world-name").textContent = theme.name;
+    $("level-name").textContent =
+      "المستوى " + ar(wi + 1) + " - " + ar(levelIndex(level));
+
+    updateHUD();
+    renderWorlds();
+
+    message(
+      level === 1
+        ? "أنا ظلك يا أنطونيو! اجمع الجنيهات، وانتبه للأطلال."
+        : "وصلنا لمنطقة جديدة. راقب الطريق، فالأسرار في كل مكان!",
+      true
+    );
+  }
+
+  function updateHUD() {
+    $("coin-count").textContent = ar(save.coins);
+    $("life-count").textContent = ar(
+      world.player ? world.player.lives : 3
+    );
+  }
+
+  function renderWorlds() {
+    const list = $("world-list");
+    list.replaceChildren();
+
+    WORLDS.forEach((theme, wi) => {
+      const first = wi * 10 + 1;
+      const last = first + 9;
+      const unlocked = save.unlockedLevel >= first;
+
+      const card = document.createElement("article");
+      card.className = "world-card " +
+        (unlocked ? "unlocked" : "locked");
+
+      const title = document.createElement("strong");
+      title.textContent = "العالم " + ar(wi + 1);
+
+      const name = document.createElement("span");
+      name.textContent = theme.name;
+
+      const desc = document.createElement("span");
+      desc.textContent = unlocked
+        ? "اكتشف الآثار، واجمع الكنوز، وتجاوز الحراس."
+        : "أكمل العالم السابق لفتح هذه المنطقة.";
+
+      const progress = document.createElement("span");
+      progress.textContent =
+        "المستويات " + ar(first) + " - " + ar(last);
+
+      const btn = document.createElement("button");
+      btn.textContent = unlocked ? "دخول العالم" : "مغلق";
+      btn.disabled = !unlocked;
+
+      btn.addEventListener("click", () => {
+        startLevel(Math.max(first, Math.min(last, save.unlockedLevel)));
+      });
+
+      card.append(title, name, desc, progress, btn);
+      list.append(card);
+    });
+  }
+
+  function startLevel(n) {
+    cancelAnimationFrame(raf);
+
+    hideOverlays();
+    showScreen("play");
+
+    paused = false;
+    running = true;
+
+    resize();
+    buildLevel(n);
+
+    lastTime = performance.now();
+    raf = requestAnimationFrame(loop);
+  }
+
+  function pauseGame() {
+    if (!running || paused || finished) return;
+
+    paused = true;
+    $("pause-screen").classList.remove("hidden");
+  }
+
+  function resumeGame() {
+    if (finished) return;
+
+    hideOverlays();
+    paused = false;
+    lastTime = performance.now();
+
+    raf = requestAnimationFrame(loop);
+  }
+
+  function home() {
+    running = false;
+    paused = false;
+    finished = false;
+
+    cancelAnimationFrame(raf);
+    hideOverlays();
+    showScreen("menu");
+    renderWorlds();
+  }
+
+  function completeLevel() {
+    if (finished) return;
+
+    finished = true;
+    running = false;
+
+    save.unlockedLevel = Math.max(
+      save.unlockedLevel,
+      Math.min(TOTAL_LEVELS, level + 1)
+    );
+
+    persist();
+
+    $("result-title").textContent =
+      level === TOTAL_LEVELS
+        ? "اكتملت المغامرة!"
+        : "أحسنت يا أنطونيو!";
+
+    $("result-text").textContent =
+      level === TOTAL_LEVELS
+        ? "لقد كشفت أسرار مصر القديمة وأكملت المستويات الستين."
+        : "أنهيت المستوى " + ar(level) + " بنجاح. استعد للمغامرة التالية.";
+
+    $("next-level-button").textContent =
+      level === TOTAL_LEVELS ? "القائمة الرئيسية" : "المستوى التالي";
+
+    $("result-screen").classList.remove("hidden");
+
+    tone(660, 0.1);
+    setTimeout(() => tone(880, 0.15), 110);
+  }
+
+  function loseLife() {
+    const p = world.player;
+
+    if (p.invulnerable > 0 || finished) return;
+
+    p.lives--;
+    p.invulnerable = 1.7;
+
+    updateHUD();
+
+    if (save.screenShake) shake = 10;
+
+    tone(145, 0.15);
+
+    if (p.lives <= 0) {
+      running = false;
+      finished = true;
+      $("game-over-screen").classList.remove("hidden");
+      return;
+    }
+
+    p.x = p.spawnX;
+    p.y = p.spawnY;
+    p.vx = 0;
+    p.vy = 0;
+
+    message("خلي بالك يا أنطونيو! باقي لك " + ar(p.lives) + " محاولات.", true);
+  }
+
+  function collectCoin(c) {
+    if (c.collected) return;
+
+    c.collected = true;
+    save.coins++;
+
+    persist();
+    updateHUD();
+    tone(820, 0.06);
+
+    for (let i = 0; i < 9; i++) {
+      particle(c.x, c.y, "#ffd35b");
+    }
+  }
+
+  function particle(x, y, color) {
+    world.particles.push({
+      x,
+      y,
+      vx: random(-100, 100),
+      vy: random(-150, -25),
+      life: 0.5,
+      maxLife: 0.5,
+      size: random(3, 6),
+      color
+    });
+  }
+
+  function overlap(a, b) {
+    return (
+      a.x < b.x + b.w &&
+      a.x + a.w > b.x &&
+      a.y < b.y + b.h &&
+      a.y + a.h > b.y
+    );
+  }
+
+  function update(dt) {
+    const p = world.player;
+    if (!p) return;
+
+    dt = Math.min(dt, 0.033);
+
+    p.invulnerable = Math.max(0, p.invulnerable - dt);
+
+    const dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+
+    p.vx = dir * p.speed;
+
+    if (dir) {
+      p.facing = dir;
+      p.walk += dt * 13;
+    }
+
+    if (input.jumpPressed && p.grounded) {
+      p.vy = -p.jumpPower;
+      p.grounded = false;
+      tone(340, 0.06);
+    }
+
+    input.jumpPressed = false;
+
+    p.vy += 1700 * dt;
+
+    const oldY = p.y;
+
+    p.x = clamp(p.x + p.vx * dt, 0, world.width - p.w);
+    p.y += p.vy * dt;
+    p.grounded = false;
+
+    if (p.vy >= 0) {
+      for (const plat of world.platforms) {
+        if (
+          p.x + p.w > plat.x &&
+          p.x < plat.x + plat.w &&
+          oldY + p.h <= plat.y &&
+          p.y + p.h >= plat.y
+        ) {
+          p.y = plat.y - p.h;
+          p.vy = 0;
+          p.grounded = true;
+
+          if (plat.type === "ground") {
+            p.spawnX = Math.max(0, plat.x + 12);
+            p.spawnY = p.y;
+          }
+
+          break;
+        }
+      }
+    }
+
+    for (const c of world.coins) {
+      if (
+        !c.collected &&
+        overlap(p, {
+          x: c.x - c.r,
+          y: c.y - c.r,
+          w: c.r * 2,
+          h: c.r * 2
+        })
+      ) {
+        collectCoin(c);
+      }
+    }
+
+    for (const e of world.enemies) {
+      if (!e.alive) continue;
+
+      e.x += e.vx * dt;
+
+      if (e.x < e.minX || e.x > e.maxX) e.vx *= -1;
+
+      e.y = world.groundY - e.h;
+
+      if (!overlap(p, e)) continue;
+
+      if (p.vy > 80 && p.y + p.h - e.y < 23) {
+        e.alive = false;
+        p.vy = -400;
+
+        for (let i = 0; i < 12; i++) {
+          particle(e.x + e.w / 2, e.y + e.h / 2, "#e8d3a3");
+        }
+
+        tone(250, 0.09);
+        message("ممتاز يا أنطونيو! تخطيت الحارس.");
+      } else {
+        loseLife();
+      }
+    }
+
+    if (p.y > H + 120) loseLife();
+
+    // كاميرا تتبع البطل أفقيًا ورأسيًا.
+    const targetX = clamp(
+      p.x - W * 0.36,
+      0,
+      Math.max(0, world.width - W)
+    );
+
+    const targetY = clamp(
+      p.y - H * 0.57,
+      0,
+      Math.max(0, world.groundY - H * 0.35)
+    );
+
+    cameraX += (targetX - cameraX) * Math.min(1, dt * 7);
+    cameraY += (targetY - cameraY) * Math.min(1, dt * 5);
+
+    // تحذيرات الظل.
+    const now = performance.now();
+
+    const near = world.enemies.some(e =>
+      e.alive &&
+      Math.abs(e.x - p.x) < 145 &&
+      e.x > p.x - 10
+    );
+
+    if (near && now - lastWarning > 4500) {
+      message("خلي بالك يا أنطونيو! فيه وحش قريب منك.");
+    }
+
+    if (p.x > 450 && p.x < 510 && now - lastWarning > 4500) {
+      message("راقب الأرض! بعض الممرات فيها فجوات.");
+    }
+
+    if (overlap(p, world.exit)) completeLevel();
+
+    shake *= Math.max(0, 1 - dt * 8);
+
+    for (let i = world.particles.length - 1; i >= 0; i--) {
+      const pt = world.particles[i];
+
+      pt.life -= dt;
+      pt.x += pt.vx * dt;
+      pt.y += pt.vy * dt;
+      pt.vy += 350 * dt;
+
+      if (pt.life <= 0) world.particles.splice(i, 1);
+    }
+  }
+
+  // =====================================================
+  // الرسومات المطورة
+  // =====================================================
+
+  function drawBackground() {
+    const theme = WORLDS[worldIndex(level)];
+
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, theme.sky[0]);
+    sky.addColorStop(1, theme.sky[1]);
+
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+
+    // الشمس وهالة الضوء.
+    const sx = W * 0.78 - cameraX * 0.035;
+    const sy = H * 0.22 - cameraY * 0.02;
+
+    const glow = ctx.createRadialGradient(sx, sy, 5, sx, sy, 95);
+    glow.addColorStop(0, "#fff6d5cc");
+    glow.addColorStop(1, "#fff6d500");
+
+    ctx.fillStyle = glow;
+    ctx.fillRect(sx - 100, sy - 100, 200, 200);
+
+    // جبال بعيدة.
+    ctx.save();
+    ctx.translate(-cameraX * 0.13, -cameraY * 0.04);
+
+    for (let i = -2; i < 12; i++) {
+      const x = i * 230;
+      const y = world.groundY + 10;
+
+      ctx.fillStyle = i % 2 ? "#8e827a66" : "#685e6655";
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 120, y - 110 - (i % 3) * 25);
+      ctx.lineTo(x + 260, y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // أهرامات متدرجة في الخلفية.
+    for (let i = -1; i < 9; i++) {
+      const x = i * 330 + 120;
+      const y = world.groundY + 4;
+
+      ctx.fillStyle = "#c9a77988";
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 85, y - 105);
+      ctx.lineTo(x + 170, y);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#f1d3a066";
+      ctx.beginPath();
+      ctx.moveTo(x + 85, y - 105);
+      ctx.lineTo(x + 170, y);
+      ctx.lineTo(x + 105, y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
+
+    // آثار معمارية بعيدة في العوالم المتقدمة.
+    const wi = worldIndex(level);
+
+    if (wi >= 1) {
+      ctx.save();
+      ctx.translate(-cameraX * 0.22, -cameraY * 0.06);
+
+      for (let i = 0; i < 12; i++) {
+        const x = i * 250 + 80;
+        const y = world.groundY;
+
+        ctx.fillStyle = "#66564b66";
+        ctx.fillRect(x, y - 135, 22, 135);
+
+        ctx.fillStyle = "#c7ab7c66";
+        ctx.fillRect(x - 8, y - 143, 38, 12);
+
+        ctx.fillRect(x + 45, y - 90, 15, 90);
       }
 
-      playTone(230, 0.08);
-      setShadowMessage("برافو يا أنطونيو! تخطيت العدو بنجاح.");
-    } else {
-      loseLife();
+      ctx.restore();
     }
   }
-}
 
-// السقوط في الفجوات.
-if (p.y > height + 100) {
-  loseLife();
-}
+  function drawGround() {
+    const theme = WORLDS[worldIndex(level)];
 
-// الكاميرا تتبع اللاعب أفقيًا ورأسيًا بسلاسة.
-const targetCameraX = clamp(
-  p.x - width * 0.36,
-  0,
-  Math.max(0, game.worldWidth - width)
-);
+    for (const p of world.platforms) {
+      const x = p.x - cameraX;
+      const y = p.y - cameraY;
 
-const targetCameraY = clamp(
-  p.y - height * 0.58,
-  0,
-  Math.max(0, game.groundY - height * 0.35)
-);
+      if (x + p.w < -20 || x > W + 20) continue;
 
-cameraX += (targetCameraX - cameraX) * Math.min(1, dt * 6);
-cameraY += (targetCameraY - cameraY) * Math.min(1, dt * 5);
+      if (p.type === "ground") {
+        ctx.fillStyle = theme.ground;
+        ctx.fillRect(x, y, p.w, p.h);
 
-// تحذيرات الظل.
-if (p.x > 450 && p.x < 520 && performance.now() - lastShadowMessage > 3500) {
-  setShadowMessage("خلي بالك! الطريق قدامك مليان مفاجآت.");
-}
+        ctx.fillStyle = theme.grass;
+        ctx.fillRect(x, y, p.w, 8);
 
-const nearbyEnemy = game.enemies.find(
-  (enemy) =>
-    enemy.alive &&
-    Math.abs(enemy.x - p.x) < 150 &&
-    enemy.x > p.x - 10
-);
+        // حبيبات الرمال والحجارة.
+        for (let tx = x + 13; tx < x + p.w; tx += 38) {
+          ctx.fillStyle = tx % 2 ? "#e9c38c66" : "#76583c55";
 
-if (nearbyEnemy && performance.now() - lastShadowMessage > 4000) {
-  setShadowMessage("خلي بالك يا أنطونيو، فيه عدو قريب منك!");
-}
+          ctx.beginPath();
+          ctx.ellipse(tx, y + 23, 4, 2, 0, 0, Math.PI * 2);
+          ctx.fill();
 
-// الوصول إلى نهاية المستوى.
-if (overlaps(p, game.exit)) {
-  completeLevel();
-}
+          ctx.fillRect(tx + 7, y + 36, 3, 2);
+        }
+      } else {
+        // منصة حجرية ذات حافة ثلاثية الأبعاد.
+        ctx.fillStyle = theme.dark;
+        ctx.fillRect(x, y + 5, p.w, p.h);
 
-screenShake *= Math.max(0, 1 - dt * 8);
+        ctx.fillStyle = theme.stone;
+        ctx.fillRect(x, y, p.w, p.h - 3);
 
-updateParticles(dt);
+        ctx.fillStyle = "#f3dbad99";
+        ctx.fillRect(x, y, p.w, 4);
 
-}
+        ctx.strokeStyle = "#51423888";
+        ctx.lineWidth = 1;
 
-function drawBackground() {
-const worldIndex = worldForLevel(currentLevel);
+        for (let tx = x + 28; tx < x + p.w; tx += 34) {
+          ctx.beginPath();
+          ctx.moveTo(tx, y + 5);
+          ctx.lineTo(tx - 5, y + p.h - 2);
+          ctx.stroke();
+        }
 
-const sky = ctx.createLinearGradient(0, 0, 0, height);
+        ctx.strokeStyle = "#594a3c55";
+        ctx.beginPath();
+        ctx.moveTo(x, y + 12);
+        ctx.lineTo(x + p.w, y + 12);
+        ctx.stroke();
+      }
+    }
+  }
 
-if (worldIndex === 2) {
-  sky.addColorStop(0, "#101a35");
-  sky.addColorStop(1, "#3a3150");
-} else if (worldIndex === 5) {
-  sky.addColorStop(0, "#191a2f");
-  sky.addColorStop(1, "#62464b");
-} else {
-  sky.addColorStop(0, "#5e9bb1");
-  sky.addColorStop(0.62, "#e9bd7b");
-  sky.addColorStop(1, "#f2d6a0");
-}
+  function drawPalm(x, y, s) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s, s);
 
-ctx.fillStyle = sky;
-ctx.fillRect(0, 0, width, height);
-
-// الشمس.
-const sunX = width * 0.77 - cameraX * 0.04;
-const sunY = height * 0.23 - cameraY * 0.03;
-
-const sunGlow = ctx.createRadialGradient(
-  sunX, sunY, 4, sunX, sunY, 75
-);
-
-sunGlow.addColorStop(0, "#fff4c4cc");
-sunGlow.addColorStop(1, "#fff4c400");
-
-ctx.fillStyle = sunGlow;
-ctx.fillRect(sunX - 80, sunY - 80, 160, 160);
-
-// جبال بعيدة تتحرك ببطء مع الكاميرا.
-ctx.save();
-ctx.translate(-cameraX * 0.15, -cameraY * 0.1);
-
-for (let i = -1; i < 8; i++) {
-  const x = i * 240;
-  const baseY = game.groundY + 15;
-
-  ctx.fillStyle = worldIndex >= 4 ? "#514451" : "#b48d6d";
-  ctx.beginPath();
-  ctx.moveTo(x, baseY);
-  ctx.lineTo(x + 120, baseY - 130 - (i % 3) * 25);
-  ctx.lineTo(x + 250, baseY);
-  ctx.closePath();
-  ctx.fill();
-}
-
-// أهرامات بعيدة.
-for (let i = -1; i < 6; i++) {
-  const x = i * 340 + 120;
-  const y = game.groundY - 15;
-
-  ctx.fillStyle = worldIndex >= 4 ? "#65505b" : "#c6a16f";
-
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x + 85, y - 105);
-  ctx.lineTo(x + 170, y);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = "#e6c38c66";
-  ctx.beginPath();
-  ctx.moveTo(x + 85, y - 105);
-  ctx.lineTo(x + 170, y);
-  ctx.lineTo(x + 92, y);
-  ctx.closePath();
-  ctx.fill();
-}
-
-ctx.restore();
-
-}
-
-function drawPalm(x, y, scale) {
-ctx.save();
-ctx.translate(x, y);
-ctx.scale(scale, scale);
-
-ctx.strokeStyle = "#62452e";
-ctx.lineWidth = 7;
-ctx.beginPath();
-ctx.moveTo(0, 0);
-ctx.quadraticCurveTo(-5, -45, 2, -85);
-ctx.stroke();
-
-ctx.strokeStyle = "#476b40";
-ctx.lineWidth = 5;
-
-for (let i = 0; i < 6; i++) {
-  const angle = -Math.PI + (i / 5) * Math.PI;
-  ctx.beginPath();
-  ctx.moveTo(2, -82);
-  ctx.quadraticCurveTo(
-    Math.cos(angle) * 24,
-    -105 + Math.sin(angle) * 15,
-    Math.cos(angle) * 55,
-    -80 + Math.sin(angle) * 38
-  );
-  ctx.stroke();
-}
-
-ctx.restore();
-
-}
-
-function drawDecorations() {
-for (const d of game.decorations) {
-const x = d.x - cameraX;
-const y = (d.y || game.groundY) - cameraY;
-
-  if (x < -150 || x > width + 150) continue;
-
-  ctx.save();
-
-  if (d.type === "palm") {
-    drawPalm(x, y, d.size);
-  } else if (d.type === "pillar") {
-    ctx.fillStyle = "#b69a72";
-    ctx.fillRect(x, y - 75 * d.size, 24 * d.size, 75 * d.size);
-
-    ctx.fillStyle = "#e0c69a";
-    ctx.fillRect(x - 5 * d.size, y - 79 * d.size, 34 * d.size, 8 * d.size);
-
-    ctx.fillStyle = "#84694c";
-    ctx.fillRect(x + 5 * d.size, y - 65 * d.size, 4 * d.size, 55 * d.size);
-  } else if (d.type === "rock") {
-    ctx.fillStyle = "#947b60";
+    ctx.strokeStyle = "#69452b";
+    ctx.lineWidth = 9;
     ctx.beginPath();
-    ctx.ellipse(x, y - 7, 18 * d.size, 10 * d.size, 0, 0, Math.PI * 2);
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-9, -48, 3, -85);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#456b3e";
+    ctx.lineWidth = 6;
+
+    for (let i = 0; i < 7; i++) {
+      const a = Math.PI + i * Math.PI / 6;
+
+      ctx.beginPath();
+      ctx.moveTo(3, -85);
+      ctx.quadraticCurveTo(
+        3 + Math.cos(a) * 28,
+        -100 + Math.sin(a) * 16,
+        3 + Math.cos(a) * 60,
+        -75 + Math.sin(a) * 30
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawObelisk(x, y, s) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s, s);
+
+    ctx.fillStyle = "#89765c";
+    ctx.fillRect(-12, -95, 24, 90);
+
+    ctx.fillStyle = "#c6ad85";
+    ctx.beginPath();
+    ctx.moveTo(-12, -95);
+    ctx.lineTo(0, -123);
+    ctx.lineTo(12, -95);
+    ctx.closePath();
     ctx.fill();
-  } else if (d.type === "ladder") {
-    const ladderHeight = d.h;
-    const ladderWidth = d.w;
 
-    ctx.strokeStyle = "#725337";
+    ctx.fillStyle = "#5d4939";
+    ctx.fillRect(-15, -5, 30, 7);
+
+    ctx.strokeStyle = "#6e573e";
+    ctx.lineWidth = 2;
+
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(-6, -80 + i * 18);
+      ctx.lineTo(6, -74 + i * 18);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawLadder(d) {
+    const x = d.x - cameraX;
+    const y = d.y - cameraY;
+
+    if (x < -80 || x > W + 80) return;
+
+    ctx.save();
+
+    ctx.strokeStyle = "#64462e";
     ctx.lineWidth = 5;
+
     ctx.beginPath();
-
     ctx.moveTo(x, y);
-    ctx.lineTo(x, y - ladderHeight);
-    ctx.moveTo(x + ladderWidth, y);
-    ctx.lineTo(x + ladderWidth, y - ladderHeight);
+    ctx.lineTo(x, y - d.h);
+    ctx.moveTo(x + 34, y);
+    ctx.lineTo(x + 34, y - d.h);
 
-    for (let rung = 10; rung < ladderHeight; rung += 18) {
-      if (d.broken && rung > ladderHeight * 0.55) continue;
+    for (let i = 12; i < d.h; i += 17) {
+      if (d.broken && i > d.h * 0.55) continue;
 
-      ctx.moveTo(x, y - rung);
-      ctx.lineTo(x + ladderWidth, y - rung);
+      ctx.moveTo(x, y - i);
+      ctx.lineTo(x + 34, y - i);
     }
 
     ctx.stroke();
 
     if (d.broken) {
-      ctx.strokeStyle = "#b48a58";
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#b68d58";
+      ctx.lineWidth = 4;
+
       ctx.beginPath();
-      ctx.moveTo(x - 5, y - ladderHeight * 0.55);
-      ctx.lineTo(x + 13, y - ladderHeight * 0.45);
-      ctx.lineTo(x + ladderWidth + 7, y - ladderHeight * 0.5);
+      ctx.moveTo(x - 3, y - d.h * 0.53);
+      ctx.lineTo(x + 14, y - d.h * 0.43);
+      ctx.lineTo(x + 39, y - d.h * 0.48);
       ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawDecorations() {
+    for (const d of world.decorations) {
+      const x = d.x - cameraX;
+      const y = d.y - cameraY;
+
+      if (x < -150 || x > W + 150) continue;
+
+      if (d.type === "ladder") {
+        drawLadder(d);
+        continue;
+      }
+
+      if (d.type === "palm") {
+        drawPalm(x, y, d.scale);
+        continue;
+      }
+
+      if (d.type === "obelisk") {
+        drawObelisk(x, y, d.scale);
+        continue;
+      }
+
+      if (d.type === "pillar") {
+        ctx.fillStyle = "#b59b77";
+        ctx.fillRect(x, y - 85 * d.scale, 28 * d.scale, 85 * d.scale);
+
+        ctx.fillStyle = "#e3c99c";
+        ctx.fillRect(x - 6, y - 91 * d.scale, 40 * d.scale, 10);
+
+        ctx.fillStyle = "#76604a";
+        ctx.fillRect(x + 6, y - 75 * d.scale, 3, 62 * d.scale);
+
+        continue;
+      }
+
+      if (d.type === "ruin") {
+        ctx.fillStyle = "#87735a";
+        ctx.fillRect(x, y - 45 * d.scale, 50 * d.scale, 45 * d.scale);
+
+        ctx.fillStyle = "#bba17b";
+        ctx.fillRect(x - 4, y - 49 * d.scale, 58 * d.scale, 7);
+
+        ctx.fillStyle = "#5c4a39";
+        ctx.fillRect(x + 10, y - 34 * d.scale, 7, 18);
+
+        continue;
+      }
+
+      if (d.type === "rock") {
+        ctx.fillStyle = "#8f775e";
+        ctx.beginPath();
+        ctx.moveTo(x - 19 * d.scale, y);
+        ctx.lineTo(x - 12 * d.scale, y - 18 * d.scale);
+        ctx.lineTo(x + 6 * d.scale, y - 25 * d.scale);
+        ctx.lineTo(x + 23 * d.scale, y - 7 * d.scale);
+        ctx.lineTo(x + 20 * d.scale, y);
+        ctx.closePath();
+        ctx.fill();
+      }
     }
   }
 
-  ctx.restore();
-}
+  function drawCoin(c, time) {
+    if (c.collected) return;
 
-}
+    const x = c.x - cameraX;
+    const y = c.y - cameraY + Math.sin(time / 260 + c.phase) * 3;
 
-function drawPlatforms() {
-for (const platform of game.platforms) {
-const x = platform.x - cameraX;
-const y = platform.y - cameraY;
+    if (x < -30 || x > W + 30) return;
 
-  if (x + platform.w < 0 || x > width) continue;
+    // دوران بصري مع انعكاس الضوء.
+    const spin = Math.abs(Math.cos(time / 350 + c.phase));
+    const rx = 3 + spin * 9;
 
-  if (platform.type === "ground") {
-    ctx.fillStyle = "#b68b58";
-    ctx.fillRect(x, y, platform.w, platform.h);
+    ctx.save();
+    ctx.translate(x, y);
 
-    ctx.fillStyle = "#637c46";
-    ctx.fillRect(x, y, platform.w, 7);
+    ctx.shadowColor = "#ffd84e";
+    ctx.shadowBlur = 15;
 
-    ctx.strokeStyle = "#8c6845";
+    const gold = ctx.createLinearGradient(-rx, -13, rx, 13);
+    gold.addColorStop(0, "#8d5517");
+    gold.addColorStop(0.25, "#ffdc63");
+    gold.addColorStop(0.52, "#fff1ae");
+    gold.addColorStop(0.75, "#d99828");
+    gold.addColorStop(1, "#8e591b");
+
+    ctx.fillStyle = gold;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rx, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = "#8c5a19";
     ctx.lineWidth = 2;
+    ctx.stroke();
 
-    for (let tx = x + 15; tx < x + platform.w; tx += 44) {
+    if (spin > 0.25) {
+      ctx.strokeStyle = "#fff0a5";
+      ctx.lineWidth = 1.5;
+
       ctx.beginPath();
-      ctx.moveTo(tx, y + 12);
-      ctx.lineTo(tx - 9, y + 24);
+      ctx.ellipse(0, 0, Math.max(1, rx - 3), 9, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = "#704315";
+      ctx.font = "bold 12px Tahoma";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("ج", 0, 0);
+    }
+
+    ctx.restore();
+  }
+
+  function drawMummy(e, x, y, time) {
+    const bob = Math.sin(time / 170 + e.phase) * 2;
+
+    ctx.save();
+    ctx.translate(x + e.w / 2, y + bob);
+
+    // الظل الأرضي.
+    ctx.fillStyle = "#17141a66";
+    ctx.beginPath();
+    ctx.ellipse(0, e.h - 1, 21, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // الذراعان.
+    ctx.strokeStyle = "#d5c5a3";
+    ctx.lineWidth = 8;
+    ctx.lineCap = "round";
+
+    ctx.beginPath();
+    ctx.moveTo(-10, 4);
+    ctx.lineTo(-19, 16);
+    ctx.moveTo(10, 4);
+    ctx.lineTo(19, 13);
+    ctx.stroke();
+
+    // الجسم.
+    const bandage = ctx.createLinearGradient(-14, 0, 14, 0);
+    bandage.addColorStop(0, "#a8997a");
+    bandage.addColorStop(0.45, "#f0e2c1");
+    bandage.addColorStop(1, "#b5a383");
+
+    ctx.fillStyle = bandage;
+    ctx.fillRect(-12, -1, 24, 27);
+
+    // لفائف القماش.
+    ctx.strokeStyle = "#8c795c";
+    ctx.lineWidth = 3;
+
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(-12, 3 + i * 6);
+      ctx.lineTo(12, 7 + i * 6);
       ctx.stroke();
     }
-  } else {
-    ctx.fillStyle = platform.type === "ruins" ? "#87745c" : "#a99a7f";
-    ctx.fillRect(x, y, platform.w, platform.h);
 
-    ctx.fillStyle = "#d5bd93";
-    ctx.fillRect(x, y, platform.w, 5);
+    // الرأس.
+    ctx.fillStyle = "#e7d9b7";
+    ctx.beginPath();
+    ctx.ellipse(0, -12, 13, 15, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-    ctx.strokeStyle = "#665443";
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#9f8d6c";
+    ctx.lineWidth = 3;
 
-    for (let tx = x + 25; tx < x + platform.w; tx += 35) {
+    ctx.beginPath();
+    ctx.moveTo(-11, -17);
+    ctx.lineTo(10, -11);
+    ctx.moveTo(-10, -7);
+    ctx.lineTo(9, -3);
+    ctx.stroke();
+
+    // العينان.
+    ctx.fillStyle = "#36252b";
+    ctx.beginPath();
+    ctx.ellipse(-5, -12, 3, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(5, -12, 3, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#ffb66c";
+    ctx.fillRect(-6, -13, 2, 2);
+    ctx.fillRect(4, -13, 2, 2);
+
+    // القدمين.
+    ctx.fillStyle = "#c4b18d";
+    ctx.fillRect(-11, 25, 9, 12);
+    ctx.fillRect(2, 25, 9, 12);
+
+    ctx.restore();
+  }
+
+  function drawGuardian(e, x, y, time) {
+    const bob = Math.sin(time / 200 + e.phase) * 2;
+
+    ctx.save();
+    ctx.translate(x + e.w / 2, y + bob);
+
+    // ظل.
+    ctx.fillStyle = "#16111d66";
+    ctx.beginPath();
+    ctx.ellipse(0, e.h - 1, 22, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // الرداء.
+    ctx.fillStyle = "#ad874b";
+    ctx.beginPath();
+    ctx.moveTo(-14, -4);
+    ctx.lineTo(14, -4);
+    ctx.lineTo(20, 34);
+    ctx.lineTo(-20, 34);
+    ctx.closePath();
+    ctx.fill();
+
+    // درع الصدر.
+    ctx.fillStyle = "#e4c477";
+    ctx.fillRect(-13, 1, 26, 17);
+
+    ctx.fillStyle = "#866032";
+    ctx.fillRect(-8, 4, 16, 11);
+
+    // الرأس.
+    ctx.fillStyle = "#c39c58";
+    ctx.fillRect(-12, -24, 24, 22);
+
+    // تاج فرعوني.
+    ctx.fillStyle = "#e2c47b";
+    ctx.fillRect(-15, -28, 30, 6);
+
+    ctx.fillStyle = "#8f6b36";
+    ctx.beginPath();
+    ctx.moveTo(-10, -28);
+    ctx.lineTo(-6, -38);
+    ctx.lineTo(0, -28);
+    ctx.lineTo(6, -38);
+    ctx.lineTo(10, -28);
+    ctx.closePath();
+    ctx.fill();
+
+    // العينان.
+    ctx.fillStyle = "#2a1b25";
+    ctx.fillRect(-8, -17, 5, 4);
+    ctx.fillRect(3, -17, 5, 4);
+
+    ctx.fillStyle = "#ffe38c";
+    ctx.fillRect(-7, -17, 2, 2);
+    ctx.fillRect(4, -17, 2, 2);
+
+    // الذراعان.
+    ctx.fillStyle = "#d0ad6a";
+    ctx.fillRect(-19, 0, 7, 22);
+    ctx.fillRect(12, 0, 7, 22);
+
+    // العصا.
+    ctx.strokeStyle = "#61472c";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(22, -3);
+    ctx.lineTo(22, 37);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawPhantom(e, x, y, time) {
+    const bob = Math.sin(time / 180 + e.phase) * 5;
+
+    ctx.save();
+    ctx.translate(x + e.w / 2, y + bob);
+
+    ctx.globalAlpha = 0.82;
+
+    const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 38);
+    glow.addColorStop(0, "#b8b7ff");
+    glow.addColorStop(1, "#8574ff00");
+
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, 38, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#9e98df";
+    ctx.beginPath();
+    ctx.moveTo(-15, -13);
+    ctx.quadraticCurveTo(-15, -31, 0, -30);
+    ctx.quadraticCurveTo(16, -29, 15, -13);
+    ctx.lineTo(18, 20);
+    ctx.lineTo(8, 14);
+    ctx.lineTo(0, 23);
+    ctx.lineTo(-8, 14);
+    ctx.lineTo(-18, 20);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#29243f";
+    ctx.fillRect(-8, -14, 5, 6);
+    ctx.fillRect(3, -14, 5, 6);
+
+    ctx.fillStyle = "#fff0b4";
+    ctx.fillRect(-7, -13, 2, 3);
+    ctx.fillRect(4, -13, 2, 3);
+
+    ctx.restore();
+  }
+
+  function drawEnemy(e, time) {
+    if (!e.alive) return;
+
+    const x = e.x - cameraX;
+    const y = e.y - cameraY;
+
+    if (x < -80 || x > W + 80) return;
+
+    if (e.type === "guardian") {
+      drawGuardian(e, x, y, time);
+    } else if (e.type === "phantom") {
+      drawPhantom(e, x, y, time);
+    } else if (e.type === "scarab") {
+      drawScarab(e, x, y, time);
+    } else {
+      drawMummy(e, x, y, time);
+    }
+  }
+
+  function drawScarab(e, x, y, time) {
+    const bob = Math.sin(time / 120 + e.phase) * 2;
+
+    ctx.save();
+    ctx.translate(x + e.w / 2, y + 24 + bob);
+
+    ctx.fillStyle = "#2c4c3d";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 17, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const shell = ctx.createLinearGradient(-12, -10, 12, 10);
+    shell.addColorStop(0, "#79b66e");
+    shell.addColorStop(0.5, "#356c4b");
+    shell.addColorStop(1, "#173e32");
+
+    ctx.fillStyle = shell;
+    ctx.beginPath();
+    ctx.ellipse(0, -3, 13, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#b0c78a";
+    ctx.lineWidth = 1.5;
+
+    ctx.beginPath();
+    ctx.moveTo(0, -12);
+    ctx.lineTo(0, 6);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#263d30";
+    ctx.lineWidth = 3;
+
+    for (let i = -1; i <= 1; i++) {
       ctx.beginPath();
-      ctx.moveTo(tx, y + 5);
-      ctx.lineTo(tx - 5, y + platform.h);
+      ctx.moveTo(i * 8, 4);
+      ctx.lineTo(i * 13, 12);
       ctx.stroke();
     }
+
+    ctx.fillStyle = "#e8cb6d";
+    ctx.fillRect(-10, -5, 3, 3);
+    ctx.fillRect(7, -5, 3, 3);
+
+    ctx.restore();
   }
-}
 
-}
+  function drawPlayer(time) {
+    const p = world.player;
+    if (!p) return;
 
-function drawCoin(coin, time) {
-if (coin.collected) return;
+    if (p.invulnerable > 0 && Math.floor(time / 90) % 2 === 0) {
+      return;
+    }
 
-const x = coin.x - cameraX;
-const y = coin.y - cameraY + Math.sin(time / 300 + coin.phase) * 3;
+    const x = p.x - cameraX;
+    const y = p.y - cameraY;
 
-if (x < -30 || x > width + 30) return;
+    ctx.save();
+    ctx.translate(x + p.w / 2, y);
+    ctx.scale(p.facing, 1);
 
-const shine = 0.78 + Math.sin(time / 180 + coin.phase) * 0.15;
+    const walk = Math.abs(p.vx) > 1 ? Math.sin(p.walk) * 4 : 0;
 
-ctx.save();
-ctx.translate(x, y);
+    // ظل واقعي أسفل القدمين.
+    ctx.fillStyle = "#1e1a1555";
+    ctx.beginPath();
+    ctx.ellipse(0, p.h - 1, 21, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-ctx.shadowColor = "#ffd35b";
-ctx.shadowBlur = 12;
+    // الحقيبة.
+    ctx.fillStyle = "#63432b";
+    ctx.fillRect(-16, 20, 10, 19);
 
-ctx.fillStyle = `rgba(255, 211, 91, ${shine})`;
-ctx.beginPath();
-ctx.ellipse(0, 0, coin.r * 0.85, coin.r, 0, 0, Math.PI * 2);
-ctx.fill();
+    ctx.fillStyle = "#a67c45";
+    ctx.fillRect(-16, 24, 10, 4);
 
-ctx.shadowBlur = 0;
-ctx.strokeStyle = "#9b631d";
-ctx.lineWidth = 2;
-ctx.stroke();
+    // الساقان.
+    ctx.fillStyle = "#594632";
+    ctx.fillRect(-10, 33, 8, 11 + walk);
+    ctx.fillRect(3, 33, 8, 11 - walk);
 
-ctx.fillStyle = "#714616";
-ctx.font = "bold 12px Tahoma";
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
-ctx.fillText("ج", 0, 0.5);
+    // الحذاء.
+    ctx.fillStyle = "#33251d";
+    ctx.fillRect(-14, 42 + walk, 13, 6);
+    ctx.fillRect(2, 42 - walk, 14, 6);
 
-ctx.restore();
+    ctx.fillStyle = "#c29a5e";
+    ctx.fillRect(-12, 43 + walk, 9, 2);
+    ctx.fillRect(4, 43 - walk, 9, 2);
 
-}
+    // الجسم والملابس.
+    const shirt = ctx.createLinearGradient(-12, 15, 12, 35);
+    shirt.addColorStop(0, "#789b71");
+    shirt.addColorStop(1, "#385b45");
 
-function drawEnemy(enemy, time) {
-if (!enemy.alive) return;
+    ctx.fillStyle = shirt;
+    ctx.fillRect(-12, 15, 24, 21);
 
-const x = enemy.x - cameraX;
-const y = enemy.y - cameraY;
+    // حزام المستكشف.
+    ctx.fillStyle = "#b68b49";
+    ctx.fillRect(-12, 29, 24, 4);
 
-if (x < -70 || x > width + 70) return;
+    ctx.fillStyle = "#f2d58b";
+    ctx.fillRect(-3, 29, 6, 4);
 
-ctx.save();
-ctx.translate(x + enemy.w / 2, y + enemy.h / 2);
+    // الرقبة.
+    ctx.fillStyle = "#bc865c";
+    ctx.fillRect(-4, 11, 8, 7);
 
-const bob = Math.sin(time / 180 + enemy.phase) * 1.8;
-ctx.translate(0, bob);
+    // الذراعان.
+    ctx.fillStyle = "#d1a076";
+    ctx.fillRect(-16, 18, 6, 15);
+    ctx.fillRect(10, 18, 6, 15);
 
-if (enemy.type === "guardian") {
-  ctx.fillStyle = "#b88c46";
-  ctx.fillRect(-15, -17, 30, 34);
+    ctx.fillStyle = "#6c8c64";
+    ctx.fillRect(-16, 18, 6, 7);
+    ctx.fillRect(10, 18, 6, 7);
 
-  ctx.fillStyle = "#e4c17b";
-  ctx.fillRect(-12, -23, 24, 13);
+    // الرأس.
+    ctx.fillStyle = "#d8a477";
+    ctx.beginPath();
+    ctx.ellipse(0, 8, 10, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-  ctx.fillStyle = "#28252a";
-  ctx.fillRect(-8, -18, 4, 4);
-  ctx.fillRect(4, -18, 4, 4);
+    // الأذن.
+    ctx.fillStyle = "#b87f58";
+    ctx.fillRect(8, 5, 4, 6);
 
-  ctx.fillStyle = "#7d5c35";
-  ctx.fillRect(-20, -7, 5, 21);
-  ctx.fillRect(15, -7, 5, 21);
-} else {
-  // جسم مومياء كرتوني.
-  ctx.fillStyle = "#e1d3ae";
-  ctx.fillRect(-12, -17, 24, 29);
-
-  ctx.fillStyle = "#b6a27f";
-  ctx.fillRect(-13, -12, 26, 4);
-  ctx.fillRect(-12, -2, 24, 4);
-  ctx.fillRect(-12, 8, 24, 4);
-
-  ctx.fillStyle = "#d6c59f";
-  ctx.fillRect(-11, -26, 22, 16);
-
-  ctx.fillStyle = "#30272a";
-  ctx.fillRect(-7, -20, 4, 4);
-  ctx.fillRect(3, -20, 4, 4);
-
-  ctx.fillStyle = "#b69c76";
-  ctx.fillRect(-11, 12, 8, 8);
-  ctx.fillRect(3, 12, 8, 8);
-}
-
-ctx.restore();
-
-}
-
-function drawPlayer(time) {
-const p = game.player;
-if (!p) return;
-
-if (p.invulnerable > 0 && Math.floor(time / 90) % 2 === 0) {
-  return;
-}
-
-const x = p.x - cameraX;
-const y = p.y - cameraY;
-
-ctx.save();
-ctx.translate(x + p.w / 2, y);
-ctx.scale(p.facing, 1);
-
-const moving = Math.abs(p.vx) > 1;
-const walk = moving ? Math.sin(p.walkTime) * 4 : 0;
-
-// ظل القدمين.
-ctx.fillStyle = "#382b2055";
-ctx.beginPath();
-ctx.ellipse(0, p.h - 1, 20, 5, 0, 0, Math.PI * 2);
-ctx.fill();
-
-// الحقيبة.
-ctx.fillStyle = "#795338";
-ctx.fillRect(-15, 18, 9, 18);
-
-// الساقان.
-ctx.fillStyle = "#54402e";
-ctx.fillRect(-10, 31, 8, 11 + walk);
-ctx.fillRect(3, 31, 8, 11 - walk);
-
-// الحذاء.
-ctx.fillStyle = "#352820";
-ctx.fillRect(-13, 40 + walk, 12, 5);
-ctx.fillRect(2, 40 - walk, 12, 5);
-
-// الجسم.
-ctx.fillStyle = "#d6a15b";
-ctx.fillRect(-12, 15, 24, 20);
-
-// الملابس.
-ctx.fillStyle = "#5a785c";
-ctx.fillRect(-11, 19, 22, 13);
-
-// الرقبة.
-ctx.fillStyle = "#bd8b60";
-ctx.fillRect(-4, 12, 8, 5);
-
-// الرأس.
-ctx.fillStyle = "#d9a477";
-ctx.beginPath();
-ctx.arc(0, 8, 10, 0, Math.PI * 2);
-ctx.fill();
-
-// الشعر.
-ctx.fillStyle = "#44352d";
-ctx.beginPath();
-ctx.arc(0, 5, 10, Math.PI, Math.PI * 2);
-ctx.fill();
-ctx.fillRect(-10, 2, 4, 7);
-
-// قبعة المستكشف.
-ctx.fillStyle = "#d8bd82";
-ctx.fillRect(-12, -2, 24, 4);
-ctx.fillRect(-8, -7, 16, 7);
-
-// العين.
-ctx.fillStyle = "#28211d";
-ctx.fillRect(4, 7, 2, 3);
-
-// الذراعان.
-ctx.fillStyle = "#bd8b60";
-ctx.fillRect(-15, 18, 5, 14);
-ctx.fillRect(10, 18, 5, 14);
-
-ctx.restore();
-
-}
-
-function drawExit(time) {
-const exit = game.exit;
-
-if (!exit) return;
-
-const x = exit.x - cameraX;
-const y = exit.y - cameraY;
-
-if (x < -100 || x > width + 100) return;
-
-ctx.save();
-
-ctx.fillStyle = "#d2b57d";
-ctx.fillRect(x, y, exit.w, exit.h);
-
-ctx.fillStyle = "#75583a";
-ctx.fillRect(x + 8, y + 10, exit.w - 16, exit.h - 10);
-
-ctx.fillStyle = "#f4d88d";
-ctx.fillRect(x + 12, y + 20, exit.w - 24, exit.h - 20);
-
-ctx.fillStyle = "#3d3024";
-ctx.beginPath();
-ctx.arc(
-  x + exit.w / 2,
-  y + 31,
-  6 + Math.sin(time / 150) * 2,
-  0,
-  Math.PI * 2
-);
-ctx.fill();
-
-ctx.fillStyle = "#fff0b3";
-ctx.font = "bold 12px Tahoma";
-ctx.textAlign = "center";
-ctx.fillText("النهاية", x + exit.w / 2, y - 12);
-
-ctx.restore();
-
-}
-
-function drawParticles() {
-for (const particle of game.particles) {
-ctx.save();
-ctx.globalAlpha = clamp(
-particle.life / particle.maxLife,
-0,
-1
-);
-
-  ctx.fillStyle = particle.color;
-  ctx.fillRect(
-    particle.x - cameraX,
-    particle.y - cameraY,
-    particle.size,
-    particle.size
-  );
-
-  ctx.restore();
-}
-
-}
-
-function render(time) {
-ctx.save();
-
-if (screenShake > 0.5) {
-  ctx.translate(
-    rand(-screenShake, screenShake),
-    rand(-screenShake, screenShake)
-  );
-}
-
-drawBackground();
-drawDecorations();
-drawPlatforms();
-
-for (const coin of game.coins) {
-  drawCoin(coin, time);
-}
-
-for (const enemy of game.enemies) {
-  drawEnemy(enemy, time);
-}
-
-drawExit(time);
-drawParticles();
-drawPlayer(time);
-
-ctx.restore();
-
-}
-
-function loop(time) {
-if (!gameRunning || paused || finished) return;
-
-const dt = Math.min((time - lastFrame) / 1000, 0.033);
-lastFrame = time;
-
-update(dt);
-render(time);
-
-if (gameRunning && !paused && !finished) {
-  animationFrame = requestAnimationFrame(loop);
-}
-
-}
-
-function bindHoldButton(id, key) {
-const button = $(id);
-
-const press = (event) => {
-  event.preventDefault();
-
-  input[key] = true;
-  button.classList.add("is-pressed");
-
-  if (button.setPointerCapture && event.pointerId !== undefined) {
-    try {
-      button.setPointerCapture(event.pointerId);
-    } catch {
-      // بعض المتصفحات لا تدعم التقاط المؤشر هنا.
+    // الشعر.
+    ctx.fillStyle = "#473126";
+    ctx.beginPath();
+    ctx.arc(0, 3, 10, Math.PI, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillRect(-10, 1, 4, 8);
+
+    // قبعة المستكشف.
+    ctx.fillStyle = "#8b693c";
+    ctx.fillRect(-12, 0, 24, 4);
+
+    ctx.fillStyle = "#e2c38a";
+    ctx.fillRect(-9, -7, 18, 8);
+
+    ctx.fillStyle = "#b08a50";
+    ctx.fillRect(-9, -2, 18, 3);
+
+    ctx.fillStyle = "#f4dfae";
+    ctx.fillRect(-5, -6, 9, 2);
+
+    // العين والحاجب.
+    ctx.fillStyle = "#3a2921";
+    ctx.fillRect(4, 6, 3, 3);
+    ctx.fillRect(3, 4, 5, 2);
+
+    // وشاح صغير.
+    ctx.fillStyle = "#b85d42";
+    ctx.fillRect(-8, 16, 16, 4);
+
+    ctx.fillStyle = "#d9895d";
+    ctx.fillRect(3, 19, 5, 9);
+
+    ctx.restore();
+  }
+
+  function drawExit(time) {
+    const e = world.exit;
+
+    if (!e) return;
+
+    const x = e.x - cameraX;
+    const y = e.y - cameraY;
+
+    if (x < -100 || x > W + 100) return;
+
+    ctx.save();
+
+    // بوابة حجرية.
+    ctx.fillStyle = "#806347";
+    ctx.fillRect(x - 5, y, e.w + 10, e.h);
+
+    ctx.fillStyle = "#cbb18a";
+    ctx.fillRect(x, y, e.w, e.h);
+
+    ctx.fillStyle = "#3a3040";
+    ctx.beginPath();
+    ctx.moveTo(x + 8, y + e.h);
+    ctx.lineTo(x + 8, y + 30);
+    ctx.quadraticCurveTo(
+      x + e.w / 2,
+      y - 8,
+      x + e.w - 8,
+      y + 30
+    );
+    ctx.lineTo(x + e.w - 8, y + e.h);
+    ctx.closePath();
+    ctx.fill();
+
+    // رمز متوهج.
+    ctx.shadowColor = "#ffd86a";
+    ctx.shadowBlur = 16 + Math.sin(time / 150) * 5;
+
+    ctx.fillStyle = "#ffdf83";
+    ctx.beginPath();
+    ctx.arc(x + e.w / 2, y + 48, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = "#fff0c6";
+    ctx.font = "bold 12px Tahoma";
+    ctx.textAlign = "center";
+    ctx.fillText("النهاية", x + e.w / 2, y - 12);
+
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    for (const p of world.particles) {
+      ctx.save();
+      ctx.globalAlpha = clamp(p.life / p.maxLife, 0, 1);
+
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 8;
+
+      ctx.beginPath();
+      ctx.arc(
+        p.x - cameraX,
+        p.y - cameraY,
+        p.size,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      ctx.restore();
     }
   }
 
-  if (key === "jump") {
-    input.jumpPressed = true;
+  function render(time) {
+    ctx.save();
+
+    if (shake > 0.5) {
+      ctx.translate(random(-shake, shake), random(-shake, shake));
+    }
+
+    drawBackground();
+    drawDecorations();
+    drawGround();
+
+    for (const c of world.coins) {
+      drawCoin(c, time);
+    }
+
+    for (const e of world.enemies) {
+      drawEnemy(e, time);
+    }
+
+    drawExit(time);
+    drawParticles();
+    drawPlayer(time);
+
+    ctx.restore();
   }
-};
 
-const release = (event) => {
-  if (event) event.preventDefault();
+  function loop(time) {
+    if (!running || paused || finished) return;
 
-  input[key] = false;
-  button.classList.remove("is-pressed");
-};
+    const dt = Math.min((time - lastTime) / 1000, 0.033);
+    lastTime = time;
 
-button.addEventListener("pointerdown", press);
-button.addEventListener("pointerup", release);
-button.addEventListener("pointercancel", release);
-button.addEventListener("lostpointercapture", release);
-button.addEventListener("contextmenu", (event) => event.preventDefault());
+    update(dt);
+    render(time);
 
-}
-
-bindHoldButton("left-button", "left");
-bindHoldButton("right-button", "right");
-bindHoldButton("jump-button", "jump");
-
-window.addEventListener("keydown", (event) => {
-if (
-["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyA", "KeyD", "KeyW"].includes(
-event.code
-)
-) {
-event.preventDefault();
-}
-
-if (event.code === "ArrowLeft" || event.code === "KeyA") {
-  input.left = true;
-}
-
-if (event.code === "ArrowRight" || event.code === "KeyD") {
-  input.right = true;
-}
-
-if (
-  event.code === "Space" ||
-  event.code === "ArrowUp" ||
-  event.code === "KeyW"
-) {
-  if (!input.jump) input.jumpPressed = true;
-  input.jump = true;
-}
-
-if (event.code === "Escape") {
-  if (paused) resumeGame();
-  else pauseGame();
-}
-
-});
-
-window.addEventListener("keyup", (event) => {
-if (event.code === "ArrowLeft" || event.code === "KeyA") {
-input.left = false;
-}
-
-if (event.code === "ArrowRight" || event.code === "KeyD") {
-  input.right = false;
-}
-
-if (
-  event.code === "Space" ||
-  event.code === "ArrowUp" ||
-  event.code === "KeyW"
-) {
-  input.jump = false;
-}
-
-});
-
-window.addEventListener("blur", () => {
-input.left = false;
-input.right = false;
-input.jump = false;
-
-document.querySelectorAll(".control-button").forEach((button) => {
-  button.classList.remove("is-pressed");
-});
-
-});
-
-$("start-button").addEventListener("click", () => {
-startLevel(1);
-});
-
-$("continue-button").addEventListener("click", () => {
-startLevel(save.unlockedLevel);
-});
-
-$("worlds-button").addEventListener("click", () => {
-renderWorldCards();
-showScreen("worlds");
-});
-
-$("settings-button").addEventListener("click", () => {
-showScreen("settings");
-});
-
-document.querySelectorAll("[data-back]").forEach((button) => {
-button.addEventListener("click", () => showScreen("menu"));
-});
-
-$("pause-button").addEventListener("click", pauseGame);
-$("resume-button").addEventListener("click", resumeGame);
-$("restart-level-button").addEventListener("click", restartLevel);
-
-$("home-button").addEventListener("click", goHome);
-$("result-home-button").addEventListener("click", goHome);
-$("game-over-home-button").addEventListener("click", goHome);
-
-$("next-level-button").addEventListener("click", () => {
-if (currentLevel >= TOTAL_LEVELS) {
-goHome();
-} else {
-startLevel(currentLevel + 1);
-}
-});
-
-$("retry-button").addEventListener("click", restartLevel);
-
-$("sound-toggle").checked = save.sound;
-$("shake-toggle").checked = save.screenShake;
-
-$("sound-toggle").addEventListener("change", (event) => {
-save.sound = event.target.checked;
-persist();
-});
-
-$("shake-toggle").addEventListener("change", (event) => {
-save.screenShake = event.target.checked;
-persist();
-});
-
-$("reset-progress-button").addEventListener("click", () => {
-const confirmed = window.confirm(
-"هل أنت متأكد أنك تريد إعادة العملات والتقدم إلى البداية؟"
-);
-
-if (!confirmed) return;
-
-save.coins = 0;
-save.unlockedLevel = 1;
-
-persist();
-updateHUD();
-renderWorldCards();
-
-setShadowMessage("بدأنا من جديد يا أنطونيو. رحلة موفقة!", true);
-
-});
-
-window.addEventListener("resize", () => {
-resizeCanvas();
-
-if (game.player) {
-  game.groundY = height - Math.max(60, height * 0.16);
-}
-
-});
-
-document.addEventListener("visibilitychange", () => {
-if (document.hidden && gameRunning && !paused) {
-pauseGame();
-}
-});
-
-// شاشة التحميل.
-function boot() {
-const progress = $("loading-progress");
-const message = $("loading-message");
-
-const messages = [
-  "نجهز معدات أنطونيو...",
-  "نستكشف أطلال مصر القديمة...",
-  "نوقظ الظل الغامض...",
-  "المغامرة جاهزة!"
-];
-
-let step = 0;
-
-const timer = setInterval(() => {
-  step++;
-
-  progress.style.width = Math.min(step * 25, 100) + "%";
-  message.textContent = messages[Math.min(step - 1, messages.length - 1)];
-
-  if (step >= 4) {
-    clearInterval(timer);
-
-    setTimeout(() => {
-      showScreen("menu");
-      renderWorldCards();
-      persist();
-    }, 350);
+    if (running && !paused && !finished) {
+      raf = requestAnimationFrame(loop);
+    }
   }
-}, 220);
 
-}
+  // =====================================================
+  // التحكم
+  // =====================================================
 
-resizeCanvas();
-renderWorldCards();
-boot();
+  function bindButton(id, key) {
+    const button = $(id);
+
+    const press = event => {
+      event.preventDefault();
+
+      input[key] = true;
+      button.classList.add("is-pressed");
+
+      if (key === "jump") input.jumpPressed = true;
+    };
+
+    const release = event => {
+      if (event) event.preventDefault();
+
+      input[key] = false;
+      button.classList.remove("is-pressed");
+    };
+
+    button.addEventListener("pointerdown", press);
+    button.addEventListener("pointerup", release);
+    button.addEventListener("pointercancel", release);
+    button.addEventListener("lostpointercapture", release);
+  }
+
+  bindButton("left-button", "left");
+  bindButton("right-button", "right");
+  bindButton("jump-button", "jump");
+
+  window.addEventListener("keydown", e => {
+    if (
+      ["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "KeyA", "KeyD", "KeyW"]
+        .includes(e.code)
+    ) {
+      e.preventDefault();
+    }
+
+    if (e.code === "ArrowLeft" || e.code === "KeyA") input.left = true;
+    if (e.code === "ArrowRight" || e.code === "KeyD") input.right = true;
+
+    if (
+      e.code === "Space" ||
+      e.code === "ArrowUp" ||
+      e.code === "KeyW"
+    ) {
+      if (!input.jump) input.jumpPressed = true;
+      input.jump = true;
+    }
+
+    if (e.code === "Escape") {
+      paused ? resumeGame() : pauseGame();
+    }
+  });
+
+  window.addEventListener("keyup", e => {
+    if (e.code === "ArrowLeft" || e.code === "KeyA") input.left = false;
+    if (e.code === "ArrowRight" || e.code === "KeyD") input.right = false;
+
+    if (
+      e.code === "Space" ||
+      e.code === "ArrowUp" ||
+      e.code === "KeyW"
+    ) {
+      input.jump = false;
+    }
+  });
+
+  window.addEventListener("blur", () => {
+    input.left = false;
+    input.right = false;
+    input.jump = false;
+  });
+
+  $("start-button").addEventListener("click", () => startLevel(1));
+  $("continue-button").addEventListener("click", () => startLevel(save.unlockedLevel));
+
+  $("worlds-button").addEventListener("click", () => {
+    renderWorlds();
+    showScreen("worlds");
+  });
+
+  $("settings-button").addEventListener("click", () => showScreen("settings"));
+
+  document.querySelectorAll("[data-back]").forEach(btn => {
+    btn.addEventListener("click", () => showScreen("menu"));
+  });
+
+  $("pause-button").addEventListener("click", pauseGame);
+  $("resume-button").addEventListener("click", resumeGame);
+
+  $("restart-level-button").addEventListener("click", () => startLevel(level));
+  $("home-button").addEventListener("click", home);
+  $("result-home-button").addEventListener("click", home);
+  $("game-over-home-button").addEventListener("click", home);
+  $("retry-button").addEventListener("click", () => startLevel(level));
+
+  $("next-level-button").addEventListener("click", () => {
+    if (level >= TOTAL_LEVELS) home();
+    else startLevel(level + 1);
+  });
+
+  $("sound-toggle").checked = save.sound;
+  $("shake-toggle").checked = save.screenShake;
+
+  $("sound-toggle").addEventListener("change", e => {
+    save.sound = e.target.checked;
+    persist();
+  });
+
+  $("shake-toggle").addEventListener("change", e => {
+    save.screenShake = e.target.checked;
+    persist();
+  });
+
+  $("reset-progress-button").addEventListener("click", () => {
+    if (!confirm("هل تريد إعادة العملات والتقدم إلى البداية؟")) return;
+
+    save.coins = 0;
+    save.unlockedLevel = 1;
+
+    persist();
+    updateHUD();
+    renderWorlds();
+
+    message("بدأنا رحلة جديدة يا أنطونيو!", true);
+  });
+
+  window.addEventListener("resize", () => {
+    resize();
+
+    if (world.player && world.player.grounded) {
+      world.player.y = world.groundY - world.player.h;
+      world.player.spawnY = world.player.y;
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && running && !paused) pauseGame();
+  });
+
+  function boot() {
+    const bar = $("loading-progress");
+    const label = $("loading-message");
+
+    const texts = [
+      "نجهز معدات أنطونيو...",
+      "نرسم أطلال مصر القديمة...",
+      "نوقظ الحراس القدماء...",
+      "المغامرة جاهزة!"
+    ];
+
+    let step = 0;
+
+    const timer = setInterval(() => {
+      step++;
+
+      bar.style.width = Math.min(step * 25, 100) + "%";
+      label.textContent = texts[Math.min(step - 1, texts.length - 1)];
+
+      if (step >= 4) {
+        clearInterval(timer);
+
+        setTimeout(() => {
+          showScreen("menu");
+          renderWorlds();
+          persist();
+        }, 350);
+      }
+    }, 220);
+  }
+
+  resize();
+  renderWorlds();
+  boot();
 })();
