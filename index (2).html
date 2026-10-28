@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Your Old Version | M11 Development</title>
+<meta name="description" content="Your Old Version — نسختك القديمة. مغامرة غموض واستكشاف من M11 Development.">
+<meta property="og:title" content="Your Old Version | M11 Development">
+<meta property="og:description" content="ظلّك القديم بيمشي وراك... اكتشف ٦ عوالم و٢٤ مرحلة.">
+<meta name="theme-color" content="#10251b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E👤%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><span id="hH"></span><span id="hG"></span><span id="hS"></span><span id="hL"></span><span style="flex:1"></span><button id="bS">🔊</button><button id="bM">☰</button></div>
+<div id="tc"><div><button data-k="l">◀</button><button data-k="r">▶</button></div><button data-k="j">⬆</button></div>
+
+<div class="ov on" id="load"><div class="in"><h1>YOUR OLD VERSION</h1><p>نسختك القديمة</p><div id="bar"><div id="pbar"></div></div><div id="pc">0%</div><p style="margin-top:20px;letter-spacing:3px">✦ M11 DEVELOPMENT ✦</p></div></div>
+
+<div class="ov" id="menu"><div class="in">
+<h1>YOUR OLD VERSION</h1><p>اختر شخصيتك... وظلّك هيلاقيك</p>
+<div class="cards">
+<div class="card" id="cb"><canvas id="pb1" width="90" height="110"></canvas><div>آدم المستكشف</div></div>
+<div class="card" id="cg"><canvas id="pg1" width="90" height="110"></canvas><div>ليان المغامِرة</div></div>
+</div>
+<button id="bStart" disabled>ابدأ المغامرة ◀</button>
+<p>المراحل</p><div class="lv" id="lv"></div>
+<button class="g" id="bReset">مسح التقدم</button>
+<p style="font-size:13px">© 2026 M11 Development — Mr. Mohamed Hussain</p>
+</div></div>
+
+<div class="ov" id="story"><div class="in"><div id="se" style="font-size:60px"></div><h2 id="st"></h2><p id="sx" style="font-size:19px;line-height:1.9"></p><button id="bGo">كمّل ◀</button></div></div>
+<div class="ov" id="win"><div class="in"><div style="font-size:60px">🏆</div><h2 id="wt"></h2><p id="ws" style="font-size:28px"></p><p id="wg"></p><button id="bNext">المرحلة التالية ◀</button><button class="g" id="bRe1">إعادة</button><button class="g" id="bMn1">القائمة</button></div></div>
+<div class="ov" id="lose"><div class="in"><div style="font-size:60px">🛡️</div><h2>انتهت المحاولة</h2><p>كل محاولة بتعلمك حاجة جديدة، حاول تاني!</p><button id="bRe2">حاول مرة أخرى ↻</button><button class="g" id="bMn2">القائمة</button></div></div>
+<div class="ov" id="rot"><div class="in"><div style="font-size:60px">📱↻</div><h2>اقلب الموبايل بالعرض</h2></div></div>
+
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
