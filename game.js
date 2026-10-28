@@ -1,1751 +1,1367 @@
+(() => {
 "use strict";
 
-/* =========================================================
-   YOUR OLD VERSION
-   M11 / Mr. Mohamed Hussain
-   GAME ENGINE — VERSION 3.0
-========================================================= */
+const $ = id => document.getElementById(id);
+const canvas = $("c");
+if (!canvas) return;
 
-(() => {
-  const canvas = document.getElementById("c");
-  const ctx = canvas?.getContext("2d");
+const ctx = canvas.getContext("2d");
+if (!ctx) return;
 
-  if (!canvas || !ctx) {
-    console.error("YOUR OLD VERSION: canvas not found.");
-    return;
-  }
+const W = canvas.width;
+const H = canvas.height;
+const TILE = 48;
 
-  const $ = id => document.getElementById(id);
+const SAVE_KEY = "m11_your_old_version_save_v3";
+const CHARACTER_KEY = "m11_selected_character";
 
-  const ui = {
-    world: $("wn"),
-    level: $("lv"),
-    gems: $("lp"),
-    fill: $("fill"),
-    hint: $("hint"),
-    start: $("o1"),
-    win: $("o2"),
-    winTitle: $("t2"),
-    winText: $("p2"),
-    nextWin: $("n2"),
-    restartWin: $("winRestart"),
-    startButton: $("go"),
-    characterArea: $("chs"),
-    left: $("left"),
-    right: $("right"),
-    jump: $("jump"),
-    restart: $("rs"),
-    next: $("nx")
-  };
+const COLORS = {
+purple: "#a78bfa",
+cyan: "#67e8f9",
+gold: "#fcd34d",
+green: "#86efac",
+red: "#fb7185",
+white: "#f8fafc"
+};
 
-  const W = canvas.width;
-  const H = canvas.height;
+const getLevels = () =>
+Array.isArray(window.LEVELS) ? window.LEVELS :
+(typeof LEVELS !== "undefined" && Array.isArray(LEVELS) ? LEVELS : []);
 
-  const TILE = 48;
-  const COLS = 20;
-  const ROWS = 11;
+const levels = getLevels();
 
-  const GRAVITY = 0.55;
-  const MOVE_SPEED = 4.0;
-  const JUMP_FORCE = -11.7;
-  const MAX_FALL_SPEED = 14;
+const state = {
+running: false,
+paused: false,
+won: false,
+gameOver: false,
+muted: false,
 
-  const STORAGE_KEY = "m11_your_old_version_save_v3";
+levelIndex: 0,
+unlockedLevel: 0,
+score: 0,
+totalGems: 0,
+lives: 3,
 
-  const COLORS = {
-    white: "#f4f7ff",
-    cyan: "#72f5e1",
-    blue: "#78a7ff",
-    purple: "#b19aff",
-    gold: "#ffd77c",
-    red: "#ff738e",
-    green: "#92f5b2"
-  };
+character: "adam",
+cameraX: 0,
+frame: 0,
+shake: 0,
 
-  const WORLDS = [
-    {
-      name: "الغابة المسحورة",
-      icon: "🌲",
-      skyTop: "#102e43",
-      skyBottom: "#286b68",
-      far: "#214f58",
-      mid: "#183f46",
-      ground: "#32634d",
-      groundTop: "#80d6a1",
-      accent: "#8df2bd"
-    },
-    {
-      name: "الآثار القديمة",
-      icon: "🏛️",
-      skyTop: "#332b4e",
-      skyBottom: "#a66e66",
-      far: "#594765",
-      mid: "#40334e",
-      ground: "#66516a",
-      groundTop: "#e4b58d",
-      accent: "#ffcb91"
-    },
-    {
-      name: "مملكة الكريستال",
-      icon: "🔮",
-      skyTop: "#101d50",
-      skyBottom: "#3f579b",
-      far: "#293d79",
-      mid: "#1e2e61",
-      ground: "#374b91",
-      groundTop: "#8de7ff",
-      accent: "#a9f6ff"
-    }
-  ];
+recording: [],
+ghosts: [],
+particles: [],
+floatingTexts: [],
+gems: [],
+powerups: [],
+movers: [],
 
-  const state = {
-    levelIndex: 0,
-    character: "adam",
-    gems: 0,
-    totalGems: 0,
-    deaths: 0,
-    running: false,
-    won: false,
-    paused: false,
-    muted: false,
-    elapsed: 0,
-    cameraX: 0,
-    particles: [],
-    stars: [],
-    clouds: [],
-    ghosts: [],
-    recording: [],
-    activePlates: new Set(),
-    doorOpen: new Set(),
-    shake: 0,
-    flash: 0,
-    time: 0,
-    lastFrame: 0,
-    audio: null
-  };
+keys: Object.create(null),
+pointerButtons: Object.create(null),
 
-  const input = {
-    left: false,
-    right: false,
-    jump: false,
-    jumpPressed: false
-  };
+player: null,
+level: null,
+map: [],
+cols: 0,
+rows: 0,
+doorsOpen: { a: false, b: false, c: false },
+plates: { "1": false, "2": false, "3": false }
 
-  const player = {
-    x: 0,
-    y: 0,
-    w: 29,
-    h: 38,
-    vx: 0,
-    vy: 0,
-    grounded: false,
-    facing: 1,
-    frame: 0,
-    invulnerable: 0,
-    spawnX: 0,
-    spawnY: 0
-  };
+};
 
-  let level = null;
-  let map = [];
-  let animationId = 0;
-  let lastTime = 0;
-  let currentCharacterButtons = [];
-  let audioContext = null;
+function loadSave() {
+try {
+const data = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}");
+state.score = Math.max(0, Number(data.score) || 0);
+state.unlockedLevel = Math.max(0, Number(data.unlockedLevel) || 0);
+state.levelIndex = Math.min(state.unlockedLevel, Math.max(0, levels.length - 1));
+state.totalGems = Math.max(0, Number(data.totalGems) || 0);
+state.muted = !!data.muted;
+} catch (_) {}
+}
 
-  /* =====================================================
-     حفظ التقدم
-  ===================================================== */
+function saveProgress() {
+try {
+localStorage.setItem(SAVE_KEY, JSON.stringify({
+score: state.score,
+unlockedLevel: state.unlockedLevel,
+totalGems: state.totalGems,
+muted: state.muted
+}));
+} catch (_) {}
+}
 
-  function loadSave() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+function currentLevel() {
+return levels[state.levelIndex] || levels[0] || {
+world: 0,
+t: "المغامرة الأولى",
+map: [
+"####################",
+"#                  #",
+"#                  #",
+"#        ^         #",
+"#    ###           #",
+"# S            E  #",
+"####################"
+]
+};
+}
 
-      state.levelIndex = clamp(
-        Number(saved.levelIndex) || 0,
-        0,
-        LEVELS.length - 1
-      );
+function normaliseMap(level) {
+const source = level.map || level.grid || [];
+const rows = source.map(row => String(row).split(""));
+const cols = Math.max(20, ...rows.map(row => row.length));
 
-      state.gems = Math.max(0, Number(saved.gems) || 0);
-      state.totalGems = Math.max(0, Number(saved.totalGems) || 0);
+return {
+  cols,
+  rows: rows.map(row => {
+    while (row.length < cols) row.push(" ");
+    return row;
+  })
+};
 
-      if (saved.character === "layan") {
-        state.character = "layan";
-      }
-    } catch (error) {
-      console.warn("Save data could not be loaded.");
-    }
-  }
+}
 
-  function saveProgress() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        levelIndex: state.levelIndex,
-        gems: state.gems,
-        totalGems: state.totalGems,
-        character: state.character
-      }));
-    } catch (error) {
-      // تستمر اللعبة حتى إذا لم يسمح المتصفح بالحفظ.
-    }
-  }
+function getTile(tx, ty) {
+if (ty < 0) return " ";
+if (tx < 0 || tx >= state.cols || ty >= state.rows) return "#";
+return state.map[ty]?.[tx] || " ";
+}
 
-  /* =====================================================
-     أدوات مساعدة
-  ===================================================== */
+function setTile(tx, ty, value) {
+if (tx < 0 || tx >= state.cols || ty < 0 || ty >= state.rows) return;
+state.map[ty][tx] = value;
+}
 
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-  }
+function isSolid(tile) {
+if (tile === "#") return true;
+if ("abc".includes(tile) && tile !== " ") {
+return !state.doorsOpen[tile];
+}
+return false;
+}
 
-  function random(min, max) {
-    return min + Math.random() * (max - min);
-  }
+function isHazard(tile) {
+return tile === "^" || tile === "!";
+}
 
-  function lerp(a, b, t) {
-    return a + (b - a) * t;
-  }
+function createPlayer(x, y) {
+return {
+x, y,
+w: 27,
+h: 38,
+vx: 0,
+vy: 0,
+speed: 3.2,
+jumpPower: 10.7,
+grounded: false,
+facing: 1,
+invulnerable: 0,
+shield: 0,
+speedBoost: 0,
+coyote: 0,
+jumpBuffer: 0,
+anim: 0
+};
+}
 
-  function roundedRect(x, y, w, h, r) {
-    const radius = Math.min(r, w / 2, h / 2);
+function findStart() {
+for (let y = 0; y < state.rows; y++) {
+for (let x = 0; x < state.cols; x++) {
+if (state.map[y][x] === "S") {
+setTile(x, y, " ");
+return { x: x * TILE + 10, y: y * TILE + 4 };
+}
+}
+}
+return { x: TILE, y: TILE };
+}
 
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.arcTo(x + w, y, x + w, y + h, radius);
-    ctx.arcTo(x + w, y + h, x, y + h, radius);
-    ctx.arcTo(x, y + h, x, y, radius);
-    ctx.arcTo(x, y, x + w, y, radius);
-    ctx.closePath();
-  }
+function createLevelObjects() {
+state.gems = [];
+state.powerups = [];
+state.movers = [];
 
-  function fillRounded(x, y, w, h, r, color) {
-    ctx.fillStyle = color;
-    roundedRect(x, y, w, h, r);
-    ctx.fill();
-  }
+for (let y = 0; y < state.rows; y++) {
+  for (let x = 0; x < state.cols; x++) {
+    const tile = state.map[y][x];
 
-  function line(x1, y1, x2, y2, color, width = 1) {
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.stroke();
-  }
-
-  function getTile(tx, ty) {
-    if (tx < 0 || tx >= COLS || ty >= ROWS) return "#";
-    if (ty < 0) return " ";
-
-    return map[ty]?.[tx] ?? " ";
-  }
-
-  function tileIsSolid(tile) {
-    return tile === "#" ||
-      (["a", "b", "c"].includes(tile) && !state.doorOpen.has(tile));
-  }
-
-  function getWorld() {
-    const index = Math.floor(state.levelIndex / 10);
-    return WORLDS[Math.min(index, WORLDS.length - 1)];
-  }
-
-  function getLevelNumber() {
-    return state.levelIndex % 10 + 1;
-  }
-
-  /* =====================================================
-     الصوت
-  ===================================================== */
-
-  function playSound(frequency = 440, duration = 0.08, type = "sine") {
-    if (state.muted) return;
-
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-
-      if (!audioContext) audioContext = new AudioCtx();
-
-      if (audioContext.state === "suspended") {
-        audioContext.resume();
-      }
-
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-
-      oscillator.type = type;
-      oscillator.frequency.value = frequency;
-
-      gain.gain.setValueAtTime(0.045, audioContext.currentTime);
-      gain.gain.exponentialRampToValueAtTime(
-        0.001,
-        audioContext.currentTime + duration
-      );
-
-      oscillator.connect(gain);
-      gain.connect(audioContext.destination);
-
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + duration);
-    } catch (error) {
-      // الصوت اختياري.
-    }
-  }
-
-  /* =====================================================
-     الجسيمات والمؤثرات
-  ===================================================== */
-
-  function burst(x, y, color, amount = 12, power = 3) {
-    for (let i = 0; i < amount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = random(0.5, power);
-
-      state.particles.push({
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 0.5,
-        size: random(2, 5),
-        life: random(20, 42),
-        maxLife: 42,
-        color,
-        gravity: 0.045
+    if (tile === "$") {
+      state.gems.push({
+        x: x * TILE + TILE / 2,
+        y: y * TILE + TILE / 2,
+        taken: false,
+        phase: Math.random() * 6
       });
+      setTile(x, y, " ");
+    }
+
+    if (tile === "M") {
+      state.movers.push({
+        x: x * TILE,
+        y: y * TILE,
+        startX: x * TILE,
+        range: TILE * 2,
+        w: TILE,
+        h: 12,
+        vx: 1.2 + state.levelIndex * 0.04
+      });
+      setTile(x, y, " ");
     }
   }
+}
 
-  function updateParticles(dt) {
-    const factor = dt / 16.667;
-
-    for (let i = state.particles.length - 1; i >= 0; i--) {
-      const p = state.particles[i];
-
-      p.x += p.vx * factor;
-      p.y += p.vy * factor;
-      p.vy += p.gravity * factor;
-      p.life -= factor;
-
-      if (p.life <= 0) {
-        state.particles.splice(i, 1);
-      }
-    }
-
-    if (state.particles.length > 220) {
-      state.particles.splice(0, state.particles.length - 220);
-    }
-  }
-
-  function drawParticles() {
-    for (const p of state.particles) {
-      ctx.globalAlpha = clamp(p.life / p.maxLife, 0, 1);
-      ctx.fillStyle = p.color;
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.globalAlpha = 1;
-  }
-
-  /* =====================================================
-     بناء المرحلة
-  ===================================================== */
-
-  function loadLevel(index, options = {}) {
-    if (!Array.isArray(LEVELS) || LEVELS.length === 0) {
-      console.error("LEVELS is missing or empty.");
-      return;
-    }
-
-    state.levelIndex = clamp(index, 0, LEVELS.length - 1);
-    level = LEVELS[state.levelIndex];
-
-    map = Array.from({ length: ROWS }, (_, y) => {
-      const source = level.map?.[y] || "";
-      return String(source).padEnd(COLS, " ").slice(0, COLS).split("");
-    });
-
-    state.activePlates.clear();
-    state.doorOpen.clear();
-    state.recording = [];
-    state.ghosts = [];
-    state.elapsed = 0;
-    state.won = false;
-    state.paused = false;
-    state.particles = [];
-    state.shake = 0;
-    state.flash = 0;
-
-    // إعداد نسخ من الخريطة لاكتشاف الأبواب وألواح الضغط.
-    const start = findTile("S");
-    const spawnX = start ? start.x * TILE + 9 : TILE;
-    const spawnY = start ? start.y * TILE + 4 : TILE;
-
-    player.x = spawnX;
-    player.y = spawnY;
-    player.spawnX = spawnX;
-    player.spawnY = spawnY;
-    player.vx = 0;
-    player.vy = 0;
-    player.grounded = false;
-    player.facing = 1;
-    player.frame = 0;
-    player.invulnerable = 35;
-
-    state.cameraX = 0;
-
-    updateHUD();
-    saveProgress();
-
-    if (!options.silent) {
-      burst(player.x + player.w / 2, player.y + player.h / 2, getWorld().accent, 15);
-    }
-  }
-
-  function findTile(symbol) {
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        if (map[y][x] === symbol) {
-          return { x, y };
-        }
-      }
-    }
-
-    return null;
-  }
-
-  /* =====================================================
-     الواجهة والإحصائيات
-  ===================================================== */
-
-  function updateHUD() {
-    if (!level) return;
-
-    const worldIndex = Math.floor(state.levelIndex / 10);
-    const world = WORLDS[worldIndex] || WORLDS[0];
-
-    if (ui.world) ui.world.textContent = world.name;
-    if (ui.level) {
-      ui.level.textContent = `${getLevelNumber()} / 10`;
-    }
-    if (ui.gems) ui.gems.textContent = String(state.gems);
-
-    if (ui.hint) {
-      ui.hint.textContent = level.h || "استكشف المكان وفكر قبل أن تتحرك.";
-    }
-
-    if (ui.fill) {
-      const percent = (state.levelIndex / LEVELS.length) * 100;
-      ui.fill.style.width = `${percent}%`;
-    }
-  }
-
-  function updateWinProgress() {
-    if (ui.fill) {
-      ui.fill.style.width = `${((state.levelIndex + 1) / LEVELS.length) * 100}%`;
-    }
-  }
-
-  /* =====================================================
-     التحكم
-  ===================================================== */
-
-  function setButtonInput(button, key) {
-    if (!button) return;
-
-    const press = event => {
-      event.preventDefault();
-
-      if (key === "jump") {
-        if (!input.jump) input.jumpPressed = true;
-        input.jump = true;
-      } else {
-        input[key] = true;
-      }
-
-      button.classList.add("pressed");
-
-      try {
-        button.setPointerCapture?.(event.pointerId);
-      } catch (error) {}
-    };
-
-    const release = event => {
-      if (event) event.preventDefault();
-
-      input[key] = false;
-      button.classList.remove("pressed");
-    };
-
-    button.addEventListener("pointerdown", press);
-    button.addEventListener("pointerup", release);
-    button.addEventListener("pointercancel", release);
-    button.addEventListener("lostpointercapture", release);
-    button.addEventListener("contextmenu", event => event.preventDefault());
-  }
-
-  setButtonInput(ui.left, "left");
-  setButtonInput(ui.right, "right");
-  setButtonInput(ui.jump, "jump");
-
-  window.addEventListener("keydown", event => {
-    const key = event.key.toLowerCase();
-
-    if ([
-      "arrowleft", "arrowright", "arrowup",
-      " ", "w", "a", "d"
-    ].includes(key)) {
-      event.preventDefault();
-    }
-
-    if (key === "arrowleft" || key === "a") input.left = true;
-    if (key === "arrowright" || key === "d") input.right = true;
-
-    if (key === " " || key === "arrowup" || key === "w") {
-      if (!input.jump) input.jumpPressed = true;
-      input.jump = true;
-    }
-
-    if (key === "r") restartLevel();
-  }, { passive: false });
-
-  window.addEventListener("keyup", event => {
-    const key = event.key.toLowerCase();
-
-    if (key === "arrowleft" || key === "a") input.left = false;
-    if (key === "arrowright" || key === "d") input.right = false;
-
-    if (key === " " || key === "arrowup" || key === "w") {
-      input.jump = false;
-    }
-  });
-
-  window.addEventListener("blur", () => {
-    input.left = false;
-    input.right = false;
-    input.jump = false;
-  });
-
-  /* =====================================================
-     التصادم
-  ===================================================== */
-
-  function overlaps(a, b) {
-    return (
-      a.x < b.x + b.w &&
-      a.x + a.w > b.x &&
-      a.y < b.y + b.h &&
-      a.y + a.h > b.y
-    );
-  }
-
-  function getNearbyTiles(entity) {
-    const left = Math.floor(entity.x / TILE);
-    const right = Math.floor((entity.x + entity.w - 1) / TILE);
-    const top = Math.floor(entity.y / TILE);
-    const bottom = Math.floor((entity.y + entity.h - 1) / TILE);
-
-    const result = [];
-
-    for (let y = top; y <= bottom; y++) {
-      for (let x = left; x <= right; x++) {
-        result.push({
-          x,
-          y,
-          tile: getTile(x, y),
-          rect: {
-            x: x * TILE,
-            y: y * TILE,
-            w: TILE,
-            h: TILE
-          }
+// توزيع جواهر إضافية في أماكن مناسبة فوق الأرض.
+for (let x = 2; x < state.cols - 2; x++) {
+  for (let y = 1; y < state.rows - 1; y++) {
+    if (getTile(x, y) === " " && getTile(x, y + 1) === "#") {
+      if ((x * 7 + y * 11 + state.levelIndex * 3) % 9 === 0) {
+        state.gems.push({
+          x: x * TILE + TILE / 2,
+          y: y * TILE - 18,
+          taken: false,
+          phase: Math.random() * 6
         });
       }
     }
-
-    return result;
   }
+}
 
-  function moveAndCollide(dt) {
-    const factor = dt / 16.667;
-
-    player.x += player.vx * factor;
-
-    for (const item of getNearbyTiles(player)) {
-      if (!tileIsSolid(item.tile)) continue;
-
-      if (!overlaps(player, item.rect)) continue;
-
-      if (player.vx > 0) {
-        player.x = item.rect.x - player.w;
-      } else if (player.vx < 0) {
-        player.x = item.rect.x + item.rect.w;
-      }
-
-      player.vx = 0;
-    }
-
-    player.y += player.vy * factor;
-    player.grounded = false;
-
-    for (const item of getNearbyTiles(player)) {
-      if (!tileIsSolid(item.tile)) continue;
-
-      if (!overlaps(player, item.rect)) continue;
-
-      if (player.vy > 0) {
-        player.y = item.rect.y - player.h;
-        player.grounded = true;
-      } else if (player.vy < 0) {
-        player.y = item.rect.y + item.rect.h;
-      }
-
-      player.vy = 0;
-    }
-
-    // حدود الخريطة
-    player.x = clamp(player.x, 0, W - player.w);
-
-    if (player.y > H + 90) {
-      die();
+// قدرات قابلة للجمع.
+for (let x = 4; x < state.cols - 3; x += 7) {
+  for (let y = 1; y < state.rows - 1; y++) {
+    if (getTile(x, y) === " " && getTile(x, y + 1) === "#") {
+      state.powerups.push({
+        x: x * TILE + TILE / 2,
+        y: y * TILE - 20,
+        type: ((x + state.levelIndex) % 2 === 0) ? "shield" : "speed",
+        taken: false,
+        phase: Math.random() * 6
+      });
+      break;
     }
   }
+}
 
-  /* =====================================================
-     الأشباح — أثر حركتك السابقة
-  ===================================================== */
+}
 
-  function recordFrame() {
-    state.recording.push({
-      x: player.x,
-      y: player.y,
-      facing: player.facing,
-      frame: player.frame,
-      grounded: player.grounded
-    });
+function loadLevel(index, keepLives = true) {
+if (!levels.length) {
+showHint("ملف levels.js لا يحتوي على مراحل صالحة.");
+return;
+}
 
-    // حماية من تسجيل طويل جدًا.
-    if (state.recording.length > 60 * 30) {
-      state.recording.shift();
+state.levelIndex = Math.max(0, Math.min(index, levels.length - 1));
+state.level = currentLevel();
+
+const normalized = normaliseMap(state.level);
+state.cols = normalized.cols;
+state.rows = normalized.rows;
+state.map = normalized.rows;
+
+state.doorsOpen = { a: false, b: false, c: false };
+state.plates = { "1": false, "2": false, "3": false };
+state.recording = [];
+state.particles = [];
+state.floatingTexts = [];
+state.cameraX = 0;
+state.frame = 0;
+state.won = false;
+state.gameOver = false;
+
+if (!keepLives) state.lives = 3;
+
+const start = findStart();
+state.player = createPlayer(start.x, start.y);
+
+createLevelObjects();
+updateHUD();
+hideOverlay("o2");
+hideOverlay("gameOver");
+showHint("اجمع الجواهر، وتجنب الأشواك، وابحث عن المخرج.");
+
+}
+
+function worldNumber() {
+const level = currentLevel();
+if (typeof level.world === "number") return level.world;
+return Math.floor(state.levelIndex / 10);
+}
+
+function updateHUD() {
+const worldNames = [
+"الغابة المسحورة",
+"الأطلال القديمة",
+"مملكة الكريستال"
+];
+
+if ($("wn")) $("wn").textContent =
+  worldNames[worldNumber()] || "العالم المجهول";
+
+if ($("lv")) $("lv").textContent = String(state.levelIndex + 1);
+if ($("lp")) $("lp").textContent = String(state.score);
+
+if ($("healthValue")) {
+  $("healthValue").textContent = `${state.lives} فرص`;
+}
+
+const fill = $("fill");
+if (fill) {
+  const progress = Math.max(
+    0,
+    Math.min(100, (state.levelIndex / Math.max(1, levels.length - 1)) * 100)
+  );
+  fill.style.width = `${progress}%`;
+}
+
+}
+
+function showOverlay(id) {
+$(id)?.classList.add("show");
+}
+
+function hideOverlay(id) {
+$(id)?.classList.remove("show");
+}
+
+let hintTimer;
+
+function showHint(message) {
+const hint = $("hint");
+if (!hint) return;
+hint.textContent = message;
+hint.classList.add("visible");
+
+clearTimeout(hintTimer);
+hintTimer = setTimeout(() => hint.classList.remove("visible"), 2600);
+
+}
+
+// الصوت باستخدام Web Audio دون الحاجة إلى ملفات خارجية.
+let audioContext;
+
+function sound(frequency = 440, duration = 0.08, type = "sine") {
+if (state.muted) return;
+
+try {
+  audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+
+  if (audioContext.state === "suspended") audioContext.resume();
+
+  const oscillator = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+  gain.gain.setValueAtTime(0.055, audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(
+    0.001,
+    audioContext.currentTime + duration
+  );
+
+  oscillator.connect(gain);
+  gain.connect(audioContext.destination);
+  oscillator.start();
+  oscillator.stop(audioContext.currentTime + duration);
+} catch (_) {}
+
+}
+
+function spawnParticles(x, y, color, count = 12) {
+for (let i = 0; i < count; i++) {
+const angle = Math.random() * Math.PI * 2;
+const speed = 1 + Math.random() * 4;
+
+  state.particles.push({
+    x, y,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    life: 25 + Math.random() * 25,
+    maxLife: 50,
+    size: 2 + Math.random() * 4,
+    color
+  });
+}
+
+}
+
+function floatingText(x, y, text, color = COLORS.gold) {
+state.floatingTexts.push({ x, y, text, color, life: 50 });
+}
+
+function rectsOverlap(a, b) {
+return a.x < b.x + b.w &&
+a.x + a.w > b.x &&
+a.y < b.y + b.h &&
+a.y + a.h > b.y;
+}
+
+function getPlayerTileBounds() {
+const p = state.player;
+return {
+left: Math.floor(p.x / TILE),
+right: Math.floor((p.x + p.w - 1) / TILE),
+top: Math.floor(p.y / TILE),
+bottom: Math.floor((p.y + p.h - 1) / TILE)
+};
+}
+
+function collideX(amount) {
+const p = state.player;
+p.x += amount;
+
+const b = getPlayerTileBounds();
+
+for (let ty = b.top; ty <= b.bottom; ty++) {
+  for (let tx = b.left; tx <= b.right; tx++) {
+    if (!isSolid(getTile(tx, ty))) continue;
+
+    if (amount > 0) p.x = tx * TILE - p.w;
+    else if (amount < 0) p.x = (tx + 1) * TILE;
+    p.vx = 0;
+  }
+}
+
+p.x = Math.max(0, Math.min(p.x, state.cols * TILE - p.w));
+
+}
+
+function collideY(amount) {
+const p = state.player;
+p.y += amount;
+p.grounded = false;
+
+const b = getPlayerTileBounds();
+
+for (let ty = b.top; ty <= b.bottom; ty++) {
+  for (let tx = b.left; tx <= b.right; tx++) {
+    if (!isSolid(getTile(tx, ty))) continue;
+
+    if (amount > 0) {
+      p.y = ty * TILE - p.h;
+      p.vy = 0;
+      p.grounded = true;
+      p.coyote = 7;
+    } else if (amount < 0) {
+      p.y = (ty + 1) * TILE;
+      p.vy = 0;
     }
   }
+}
 
-  function spawnGhostFromRecording() {
-    if (state.recording.length < 20) return;
+if (!p.grounded && p.coyote > 0) p.coyote--;
 
-    state.ghosts.push({
-      frames: state.recording.slice(),
-      index: 0,
-      alpha: 0.65
-    });
+}
 
-    // الحد الأقصى 3 أشباح لتجنب ازدحام الشاشة.
-    if (state.ghosts.length > 3) {
-      state.ghosts.shift();
+function updateGhosts() {
+for (const ghost of state.ghosts) {
+if (ghost.index < ghost.frames.length) {
+const frame = ghost.frames[ghost.index++];
+ghost.x = frame.x;
+ghost.y = frame.y;
+} else {
+ghost.finished = true;
+}
+}
+
+state.ghosts = state.ghosts.filter(g => !g.finished);
+
+}
+
+function createGhost() {
+if (state.recording.length < 10) return;
+
+state.ghosts.push({
+  frames: state.recording.map(f => ({ ...f })),
+  index: 0,
+  x: state.recording[0].x,
+  y: state.recording[0].y,
+  finished: false
+});
+
+// احتفظ بعدد محدود لتجنب استهلاك الذاكرة.
+if (state.ghosts.length > 4) state.ghosts.shift();
+
+}
+
+function resetAfterHit() {
+if (state.player.shield > 0) {
+state.player.shield = 0;
+spawnParticles(
+state.player.x + state.player.w / 2,
+state.player.y + state.player.h / 2,
+COLORS.cyan,
+20
+);
+floatingText(state.player.x, state.player.y, "الدرع حماك!", COLORS.cyan);
+sound(660, 0.13);
+return;
+}
+
+if (state.player.invulnerable > 0 || state.gameOver || state.won) return;
+
+createGhost();
+state.lives--;
+state.shake = 12;
+
+sound(130, 0.25, "sawtooth");
+spawnParticles(
+  state.player.x + state.player.w / 2,
+  state.player.y + state.player.h / 2,
+  COLORS.red,
+  24
+);
+
+if (state.lives <= 0) {
+  state.lives = 0;
+  state.gameOver = true;
+  state.running = false;
+
+  if ($("finalScore")) $("finalScore").textContent = String(state.score);
+  if ($("finalLevel")) $("finalLevel").textContent = String(state.levelIndex + 1);
+
+  updateHUD();
+  showOverlay("gameOver");
+  return;
+}
+
+const start = findStart();
+state.player.x = start.x;
+state.player.y = start.y;
+state.player.vx = 0;
+state.player.vy = 0;
+state.player.invulnerable = 90;
+state.recording = [];
+
+updateHUD();
+showHint(`خسرت فرصة! متبقي ${state.lives}.`);
+
+}
+
+function checkPlates() {
+const plateOccupied = { "1": false, "2": false, "3": false };
+const p = state.player;
+
+const occupants = [
+  { x: p.x, y: p.y, w: p.w, h: p.h },
+  ...state.ghosts.map(g => ({ x: g.x, y: g.y, w: p.w, h: p.h }))
+];
+
+for (let y = 0; y < state.rows; y++) {
+  for (let x = 0; x < state.cols; x++) {
+    const tile = getTile(x, y);
+    if (!["1", "2", "3"].includes(tile)) continue;
+
+    const plate = { x: x * TILE, y: y * TILE + 8, w: TILE, h: TILE - 8 };
+
+    if (occupants.some(o => rectsOverlap(o, plate))) {
+      plateOccupied[tile] = true;
     }
   }
+}
 
-  function updateGhosts() {
-    for (const ghost of state.ghosts) {
-      if (ghost.index < ghost.frames.length - 1) {
-        ghost.index++;
-      }
-    }
+for (const key of ["1", "2", "3"]) {
+  if (plateOccupied[key] && !state.plates[key]) {
+    sound(520, 0.1);
+    showHint(`تم تفعيل لوحة الضغط ${key}`);
   }
+}
 
-  function drawGhosts() {
-    for (const ghost of state.ghosts) {
-      const frame = ghost.frames[ghost.index];
-      if (!frame) continue;
+state.plates = plateOccupied;
+state.doorsOpen.a = plateOccupied["1"];
+state.doorsOpen.b = plateOccupied["2"];
+state.doorsOpen.c = plateOccupied["3"];
 
-      const x = frame.x - state.cameraX;
-      const y = frame.y;
+}
 
-      ctx.save();
-      ctx.globalAlpha = ghost.alpha * (0.65 + Math.sin(state.time * 0.005) * 0.12);
+function collectObjects() {
+const p = state.player;
+const box = { x: p.x, y: p.y, w: p.w, h: p.h };
 
-      // هالة الشبح
-      ctx.shadowColor = "#78f5ff";
-      ctx.shadowBlur = 18;
+for (const gem of state.gems) {
+  if (gem.taken) continue;
 
-      drawCharacter(x, y, frame.facing, frame.frame, true);
+  const boxGem = { x: gem.x - 10, y: gem.y - 10, w: 20, h: 20 };
 
-      ctx.restore();
-    }
-  }
+  if (rectsOverlap(box, boxGem)) {
+    gem.taken = true;
+    state.score += 10;
+    state.totalGems++;
 
-  /* =====================================================
-     الألواح والأبواب
-  ===================================================== */
-
-  function updatePlates() {
-    state.activePlates.clear();
-
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        const symbol = map[y][x];
-
-        if (!["1", "2", "3"].includes(symbol)) continue;
-
-        const plateRect = {
-          x: x * TILE + 4,
-          y: y * TILE + TILE - 11,
-          w: TILE - 8,
-          h: 12
-        };
-
-        let pressed = overlaps(player, plateRect);
-
-        for (const ghost of state.ghosts) {
-          const frame = ghost.frames[ghost.index];
-
-          if (!frame) continue;
-
-          const ghostRect = {
-            x: frame.x,
-            y: frame.y,
-            w: player.w,
-            h: player.h
-          };
-
-          if (overlaps(ghostRect, plateRect)) {
-            pressed = true;
-          }
-        }
-
-        if (pressed) state.activePlates.add(symbol);
-      }
-    }
-
-    const doors = [
-      ["a", "1"],
-      ["b", "2"],
-      ["c", "3"]
-    ];
-
-    for (const [door, plate] of doors) {
-      if (state.activePlates.has(plate)) {
-        state.doorOpen.add(door);
-      } else {
-        state.doorOpen.delete(door);
-      }
-    }
-  }
-
-  /* =====================================================
-     تحديث اللعبة
-  ===================================================== */
-
-  function update(dt) {
-    if (!state.running || state.won || state.paused) return;
-
-    const factor = clamp(dt / 16.667, 0, 2);
-    state.time += dt;
-    state.elapsed += dt;
-
-    if (player.invulnerable > 0) {
-      player.invulnerable -= factor;
-    }
-
-    if (state.shake > 0) {
-      state.shake = Math.max(0, state.shake - factor);
-    }
-
-    if (state.flash > 0) {
-      state.flash = Math.max(0, state.flash - factor);
-    }
-
-    // الحركة الأفقية
-    let direction = 0;
-
-    if (input.left) direction -= 1;
-    if (input.right) direction += 1;
-
-    player.vx = direction * MOVE_SPEED;
-
-    if (direction !== 0) {
-      player.facing = direction;
-      player.frame += factor * 0.18;
-    } else {
-      player.frame = 0;
-    }
-
-    // القفز
-    if (input.jumpPressed && player.grounded) {
-      player.vy = JUMP_FORCE;
-      player.grounded = false;
-      playSound(340, 0.1, "triangle");
-      burst(player.x + player.w / 2, player.y + player.h, getWorld().accent, 5, 1.5);
-    }
-
-    input.jumpPressed = false;
-
-    // قفزة أطول عند استمرار الضغط لفترة قصيرة.
-    if (input.jump && player.vy < -3) {
-      player.vy -= 0.16 * factor;
-    }
-
-    player.vy += GRAVITY * factor;
-    player.vy = Math.min(player.vy, MAX_FALL_SPEED);
-
-    moveAndCollide(dt);
-
-    updateGhosts();
-    updatePlates();
-    checkHazards();
-    checkExit();
-    checkGems();
-    recordFrame();
-
-    updateCamera();
-    updateParticles(dt);
-  }
-
-  /* =====================================================
-     الفخاخ
-  ===================================================== */
-
-  function checkHazards() {
-    if (player.invulnerable > 0) return;
-
-    for (const item of getNearbyTiles(player)) {
-      if (item.tile !== "^") continue;
-
-      const spikeRect = {
-        x: item.rect.x + 5,
-        y: item.rect.y + 16,
-        w: item.rect.w - 10,
-        h: item.rect.h - 16
-      };
-
-      if (overlaps(player, spikeRect)) {
-        die();
-        return;
-      }
-    }
-  }
-
-  function die() {
-    if (player.invulnerable > 0 || state.won) return;
-
-    state.deaths++;
-    state.shake = 12;
-    state.flash = 8;
-
-    burst(
-      player.x + player.w / 2,
-      player.y + player.h / 2,
-      COLORS.red,
-      22,
-      4
-    );
-
-    playSound(125, 0.22, "sawtooth");
-
-    spawnGhostFromRecording();
-
-    const previousGhosts = state.ghosts.slice();
-
-    const currentIndex = state.levelIndex;
-    loadLevel(currentIndex, { silent: true });
-
-    state.ghosts = previousGhosts;
-
-    // الشبح يعود للبداية ليعيد مسار حركتك.
-    for (const ghost of state.ghosts) {
-      ghost.index = 0;
-    }
-
-    player.invulnerable = 70;
-  }
-
-  /* =====================================================
-     الجواهر
-  ===================================================== */
-
-  function checkGems() {
-    // أماكن الجواهر مشتقة من بعض المساحات الفارغة فوق المنصات.
-    // لا يتم تعديل الخريطة أثناء اللعب.
-    if (!level._gemLocations) {
-      level._gemLocations = [];
-
-      for (let y = 1; y < ROWS - 1; y++) {
-        for (let x = 1; x < COLS - 1; x++) {
-          const tile = getTile(x, y);
-
-          if (
-            tile === " " &&
-            getTile(x, y + 1) === "#" &&
-            Math.random() < 0.035
-          ) {
-            level._gemLocations.push({
-              x: x * TILE + TILE / 2,
-              y: y * TILE - 20,
-              collected: false
-            });
-          }
-        }
-      }
-    }
-
-    for (const gem of level._gemLocations) {
-      if (gem.collected) continue;
-
-      const rect = {
-        x: gem.x - 10,
-        y: gem.y - 10,
-        w: 20,
-        h: 20
-      };
-
-      if (overlaps(player, rect)) {
-        gem.collected = true;
-        state.gems++;
-        state.totalGems++;
-
-        burst(gem.x, gem.y, COLORS.gold, 14, 3);
-        playSound(720, 0.12, "sine");
-        updateHUD();
-        saveProgress();
-      }
-    }
-  }
-
-  /* =====================================================
-     باب النهاية
-  ===================================================== */
-
-  function checkExit() {
-    const exit = findTile("E");
-    if (!exit) return;
-
-    const exitRect = {
-      x: exit.x * TILE + 8,
-      y: exit.y * TILE + 3,
-      w: TILE - 16,
-      h: TILE - 3
-    };
-
-    if (overlaps(player, exitRect)) {
-      completeLevel();
-    }
-  }
-
-  function completeLevel() {
-    if (state.won) return;
-
-    state.won = true;
-    state.running = false;
-
-    burst(
-      player.x + player.w / 2,
-      player.y + player.h / 2,
-      COLORS.gold,
-      35,
-      5
-    );
-
-    playSound(660, 0.14, "triangle");
-    setTimeout(() => playSound(880, 0.22, "triangle"), 100);
-
-    const nextIndex = state.levelIndex + 1;
-    const completedWorld = Math.floor(state.levelIndex / 10);
-    const nextWorld = Math.floor(nextIndex / 10);
-
-    if (nextIndex < LEVELS.length) {
-      if (completedWorld !== nextWorld) {
-        if (ui.winTitle) {
-          ui.winTitle.textContent = `🌟 وصلت إلى ${WORLDS[nextWorld].name}!`;
-        }
-
-        if (ui.winText) {
-          ui.winText.textContent =
-            "أنهيت العالم السابق بنجاح. استعد لتحديات وأسرار جديدة!";
-        }
-      } else {
-        if (ui.winTitle) ui.winTitle.textContent = "أحسنت أيها المغامر!";
-        if (ui.winText) {
-          ui.winText.textContent =
-            `أنهيت المرحلة ${getLevelNumber()} بنجاح. تابع رحلتك لاكتشاف المزيد.`;
-        }
-      }
-
-      if (ui.nextWin) ui.nextWin.textContent = "المرحلة التالية ←";
-    } else {
-      if (ui.winTitle) ui.winTitle.textContent = "🏆 أنهيت المغامرة!";
-      if (ui.winText) {
-        ui.winText.textContent =
-          "لقد اجتزت العوالم الثلاثة! أنت بطل YOUR OLD VERSION الحقيقي.";
-      }
-
-      if (ui.nextWin) ui.nextWin.textContent = "ابدأ من جديد ↻";
-    }
-
-    if (ui.win) ui.win.classList.add("show");
-
-    updateWinProgress();
-
-    state.levelIndex = Math.min(state.levelIndex + 1, LEVELS.length - 1);
+    sound(800, 0.08);
+    spawnParticles(gem.x, gem.y, COLORS.gold, 9);
+    floatingText(gem.x, gem.y, "+10", COLORS.gold);
+    updateHUD();
     saveProgress();
   }
+}
 
-  /* =====================================================
-     إعادة المرحلة والانتقال
-  ===================================================== */
+for (const power of state.powerups) {
+  if (power.taken) continue;
 
-  function restartLevel() {
-    if (state.recording.length > 20) {
-      spawnGhostFromRecording();
-    }
+  const boxPower = {
+    x: power.x - 13,
+    y: power.y - 13,
+    w: 26,
+    h: 26
+  };
 
-    const previousGhosts = state.ghosts.slice();
-    const index = state.levelIndex;
+  if (!rectsOverlap(box, boxPower)) continue;
 
-    loadLevel(index, { silent: true });
+  power.taken = true;
 
-    state.ghosts = previousGhosts;
-
-    for (const ghost of state.ghosts) {
-      ghost.index = 0;
-    }
-
-    state.running = true;
-
-    if (ui.start) ui.start.classList.remove("show");
-    if (ui.win) ui.win.classList.remove("show");
+  if (power.type === "shield") {
+    p.shield = 60 * 8;
+    floatingText(power.x, power.y, "درع!", COLORS.cyan);
+    showHint("🛡️ حصلت على درع مؤقت!");
+  } else {
+    p.speedBoost = 60 * 6;
+    floatingText(power.x, power.y, "سرعة!", COLORS.green);
+    showHint("⚡ سرعتك زادت مؤقتًا!");
   }
 
-  function nextLevel() {
-    const next = state.levelIndex + 1;
+  state.score += 25;
+  sound(920, 0.15);
+  spawnParticles(power.x, power.y, COLORS.cyan, 16);
+  updateHUD();
+  saveProgress();
+}
 
-    if (next >= LEVELS.length) {
-      state.levelIndex = 0;
-      state.gems = 0;
-      state.totalGems = 0;
-      loadLevel(0);
-    } else {
-      loadLevel(next);
-    }
+}
 
-    state.running = true;
+function updateMovers() {
+for (const m of state.movers) {
+m.x += m.vx;
 
-    if (ui.win) ui.win.classList.remove("show");
-    if (ui.start) ui.start.classList.remove("show");
+  if (m.x > m.startX + m.range || m.x < m.startX - m.range) {
+    m.vx *= -1;
   }
 
-  if (ui.restart) {
-    ui.restart.addEventListener("click", restartLevel);
+  const p = state.player;
+  const platform = { x: m.x, y: m.y, w: m.w, h: m.h };
+  const feet = { x: p.x, y: p.y + p.h - 3, w: p.w, h: 7 };
+
+  if (p.vy >= 0 && rectsOverlap(feet, platform)) {
+    p.y = m.y - p.h;
+    p.vy = 0;
+    p.grounded = true;
+    p.coyote = 7;
   }
+}
 
-  if (ui.restartWin) {
-    ui.restartWin.addEventListener("click", restartLevel);
-  }
+}
 
-  if (ui.next) {
-    ui.next.addEventListener("click", nextLevel);
-  }
+function checkHazardsAndExit() {
+const p = state.player;
+const b = getPlayerTileBounds();
 
-  if (ui.nextWin) {
-    ui.nextWin.addEventListener("click", nextLevel);
-  }
+for (let ty = b.top; ty <= b.bottom; ty++) {
+  for (let tx = b.left; tx <= b.right; tx++) {
+    const tile = getTile(tx, ty);
 
-  /* =====================================================
-     اختيار الشخصية
-  ===================================================== */
-
-  function chooseCharacter(character) {
-    if (!["adam", "layan"].includes(character)) return;
-
-    state.character = character;
-
-    if (ui.characterArea) {
-      currentCharacterButtons =
-        [...ui.characterArea.querySelectorAll("[data-character]")];
-
-      for (const button of currentCharacterButtons) {
-        const selected = button.dataset.character === character;
-
-        button.classList.toggle("selected", selected);
-        button.setAttribute("aria-pressed", String(selected));
-      }
-    }
-
-    saveProgress();
-  }
-
-  if (ui.characterArea) {
-    ui.characterArea.querySelectorAll("[data-character]").forEach(button => {
-      button.addEventListener("click", () => {
-        chooseCharacter(button.dataset.character);
-      });
-    });
-  }
-
-  /* =====================================================
-     الكاميرا
-  ===================================================== */
-
-  function updateCamera() {
-    const target = clamp(
-      player.x + player.w / 2 - W / 2,
-      0,
-      Math.max(0, COLS * TILE - W)
-    );
-
-    state.cameraX = lerp(state.cameraX, target, 0.12);
-  }
-
-  /* =====================================================
-     رسم الخلفية
-  ===================================================== */
-
-  function createBackgroundObjects() {
-    state.stars = [];
-    state.clouds = [];
-
-    for (let i = 0; i < 60; i++) {
-      state.stars.push({
-        x: random(0, W),
-        y: random(10, H * 0.72),
-        size: random(1, 2.8),
-        phase: random(0, Math.PI * 2)
-      });
-    }
-
-    for (let i = 0; i < 7; i++) {
-      state.clouds.push({
-        x: random(0, W),
-        y: random(35, H * 0.42),
-        scale: random(0.5, 1.25),
-        speed: random(0.1, 0.3)
-      });
-    }
-  }
-
-  function drawBackground() {
-    const world = getWorld();
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, H);
-    gradient.addColorStop(0, world.skyTop);
-    gradient.addColorStop(1, world.skyBottom);
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, W, H);
-
-    // ضوء القمر أو الشمس.
-    const glow = ctx.createRadialGradient(
-      W * 0.76, H * 0.22, 4,
-      W * 0.76, H * 0.22, 170
-    );
-
-    glow.addColorStop(0, "rgba(255,255,230,0.20)");
-    glow.addColorStop(1, "rgba(255,255,230,0)");
-
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, W, H);
-
-    ctx.beginPath();
-    ctx.arc(W * 0.76, H * 0.22, 27, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,248,214,0.88)";
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.arc(W * 0.76 + 10, H * 0.22 - 6, 25, 0, Math.PI * 2);
-    ctx.fillStyle = world.skyTop;
-    ctx.fill();
-
-    // نجوم خافتة.
-    for (const star of state.stars) {
-      const alpha = 0.25 + Math.abs(Math.sin(state.time * 0.001 + star.phase)) * 0.55;
-
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = "#e4f5ff";
-
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.globalAlpha = 1;
-
-    drawDistantLandscape(world);
-    drawClouds();
-    drawAtmosphere(world);
-  }
-
-  function drawDistantLandscape(world) {
-    // الجبال الخلفية.
-    ctx.fillStyle = world.far;
-    ctx.beginPath();
-    ctx.moveTo(0, H);
-
-    for (let x = -80; x <= W + 100; x += 80) {
-      const y = H * 0.57 + Math.sin(x * 0.013) * 24;
-      ctx.lineTo(x, y);
-      ctx.lineTo(x + 40, y - random(10, 28));
-    }
-
-    ctx.lineTo(W, H);
-    ctx.closePath();
-    ctx.fill();
-
-    // التلال الأمامية.
-    ctx.fillStyle = world.mid;
-    ctx.beginPath();
-    ctx.moveTo(0, H);
-
-    for (let x = -40; x <= W + 80; x += 60) {
-      const y = H * 0.72 + Math.sin(x * 0.019 + 2) * 25;
-      ctx.lineTo(x, y);
-      ctx.lineTo(x + 30, y - random(12, 25));
-    }
-
-    ctx.lineTo(W, H);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  function drawClouds() {
-    for (const cloud of state.clouds) {
-      const x = (cloud.x + state.time * cloud.speed * 0.02) % (W + 150) - 75;
-      const y = cloud.y;
-      const s = cloud.scale;
-
-      ctx.globalAlpha = 0.09;
-      ctx.fillStyle = "#e7f6ff";
-
-      ctx.beginPath();
-      ctx.ellipse(x, y, 37 * s, 13 * s, 0, 0, Math.PI * 2);
-      ctx.ellipse(x + 23 * s, y - 8 * s, 24 * s, 17 * s, 0, 0, Math.PI * 2);
-      ctx.ellipse(x - 19 * s, y - 3 * s, 21 * s, 13 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.globalAlpha = 1;
-  }
-
-  function drawAtmosphere(world) {
-    const gradient = ctx.createLinearGradient(0, 0, 0, H);
-    gradient.addColorStop(0, "rgba(8,12,29,0)");
-    gradient.addColorStop(1, "rgba(8,12,29,0.22)");
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, W, H);
-
-    // إضاءة أطراف المشهد.
-    const vignette = ctx.createRadialGradient(
-      W / 2, H / 2, H * 0.2,
-      W / 2, H / 2, H * 0.85
-    );
-
-    vignette.addColorStop(0, "rgba(0,0,0,0)");
-    vignette.addColorStop(1, "rgba(0,0,0,0.2)");
-
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  /* =====================================================
-     رسم الأرض والمنصات
-  ===================================================== */
-
-  function drawGround(x, y, world) {
-    ctx.fillStyle = world.ground;
-    ctx.fillRect(x, y, TILE, TILE);
-
-    // سطح الأرض.
-    ctx.fillStyle = world.groundTop;
-    ctx.fillRect(x, y, TILE, 6);
-
-    // خطوط وحجارة صغيرة.
-    ctx.fillStyle = "rgba(0,0,0,0.12)";
-    ctx.fillRect(x + 5, y + 18, 12, 3);
-    ctx.fillRect(x + 25, y + 33, 15, 3);
-
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    ctx.fillRect(x + 7, y + 12, 8, 2);
-  }
-
-  function drawDoor(x, y, open, world) {
-    if (open) {
-      ctx.save();
-      ctx.globalAlpha = 0.4;
-      ctx.fillStyle = world.accent;
-      ctx.shadowColor = world.accent;
-      ctx.shadowBlur = 20;
-      ctx.fillRect(x + 10, y + 6, TILE - 20, TILE - 6);
-      ctx.restore();
+    if (isHazard(tile)) {
+      resetAfterHit();
       return;
     }
 
-    ctx.save();
+    if (tile === "E" && !state.won && !state.gameOver) {
+      completeLevel();
+      return;
+    }
+  }
+}
 
-    ctx.shadowColor = world.accent;
-    ctx.shadowBlur = 10;
+if (p.y > state.rows * TILE + 80) {
+  resetAfterHit();
+}
 
-    fillRounded(x + 8, y + 4, TILE - 16, TILE - 4, 8, "#171d36");
+}
 
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = world.accent;
-    ctx.lineWidth = 3;
-    roundedRect(x + 8, y + 4, TILE - 16, TILE - 4, 8);
+function completeLevel() {
+if (state.won || state.gameOver) return;
+
+state.won = true;
+state.running = false;
+
+state.score += 100 + state.lives * 20;
+state.unlockedLevel = Math.max(
+  state.unlockedLevel,
+  Math.min(state.levelIndex + 1, levels.length - 1)
+);
+
+if ($("t2")) $("t2").textContent = "أحسنت! 🎉";
+if ($("p2")) {
+  $("p2").textContent =
+    state.levelIndex >= levels.length - 1
+      ? "أنهيت جميع المراحل المتاحة!"
+      : "أنهيت المرحلة بنجاح وفتحت المرحلة التالية.";
+}
+
+if ($("victoryScore")) $("victoryScore").textContent = String(state.score);
+if ($("victoryGems")) {
+  $("victoryGems").textContent = String(
+    state.gems.filter(g => g.taken).length
+  );
+}
+
+const nextButton = $("n2");
+
+if (nextButton) {
+  nextButton.textContent =
+    state.levelIndex >= levels.length - 1
+      ? "العب من البداية ↻"
+      : "المرحلة التالية ←";
+}
+
+spawnParticles(
+  state.player.x + state.player.w / 2,
+  state.player.y + state.player.h / 2,
+  COLORS.gold,
+  50
+);
+
+sound(660, 0.16);
+setTimeout(() => sound(880, 0.2), 100);
+
+updateHUD();
+saveProgress();
+showOverlay("o2");
+
+}
+
+function update() {
+if (!state.running || state.paused || state.won || state.gameOver) return;
+
+state.frame++;
+
+const p = state.player;
+const left = state.keys.ArrowLeft || state.keys.KeyA ||
+  state.pointerButtons.left;
+const right = state.keys.ArrowRight || state.keys.KeyD ||
+  state.pointerButtons.right;
+const jump = state.keys.ArrowUp || state.keys.KeyW ||
+  state.keys.Space || state.pointerButtons.jump;
+
+const speedMultiplier = p.speedBoost > 0 ? 1.65 : 1;
+const target = (Number(right) - Number(left)) * p.speed * speedMultiplier;
+
+if (left || right) {
+  p.vx += (target - p.vx) * 0.28;
+  p.facing = right ? 1 : -1;
+  p.anim += 0.2;
+} else {
+  p.vx *= 0.76;
+  if (Math.abs(p.vx) < 0.1) p.vx = 0;
+}
+
+if (jump) p.jumpBuffer = 8;
+else if (p.jumpBuffer > 0) p.jumpBuffer--;
+
+if (p.jumpBuffer > 0 && (p.grounded || p.coyote > 0)) {
+  p.vy = -p.jumpPower;
+  p.grounded = false;
+  p.coyote = 0;
+  p.jumpBuffer = 0;
+  sound(300, 0.07);
+}
+
+p.vy = Math.min(p.vy + 0.48, 12);
+
+if (p.invulnerable > 0) p.invulnerable--;
+if (p.shield > 0) p.shield--;
+if (p.speedBoost > 0) p.speedBoost--;
+
+collideX(p.vx);
+collideY(p.vy);
+
+updateGhosts();
+updateMovers();
+checkPlates();
+collectObjects();
+checkHazardsAndExit();
+
+if (!state.won && !state.gameOver) {
+  state.recording.push({ x: p.x, y: p.y });
+
+  // الحد الأعلى للتسجيل يمنع استهلاك ذاكرة كبيرة.
+  if (state.recording.length > 1800) state.recording.shift();
+}
+
+state.cameraX = Math.max(
+  0,
+  Math.min(p.x - W * 0.38, state.cols * TILE - W)
+);
+
+for (const particle of state.particles) {
+  particle.x += particle.vx;
+  particle.y += particle.vy;
+  particle.vy += 0.08;
+  particle.life--;
+}
+
+state.particles = state.particles.filter(particle => particle.life > 0);
+
+for (const text of state.floatingTexts) {
+  text.y -= 0.6;
+  text.life--;
+}
+
+state.floatingTexts = state.floatingTexts.filter(text => text.life > 0);
+
+if (state.shake > 0) state.shake *= 0.82;
+
+updateHUD();
+
+}
+
+function roundedRect(x, y, w, h, r) {
+ctx.beginPath();
+ctx.roundRect(x, y, w, h, r);
+}
+
+function drawBackground() {
+const world = worldNumber();
+
+const palettes = [
+  ["#10152d", "#253b51", "#507c73"],
+  ["#16132d", "#44335e", "#936b65"],
+  ["#101c3b", "#284e77", "#72b6db"]
+];
+
+const colors = palettes[world] || palettes[0];
+
+const gradient = ctx.createLinearGradient(0, 0, 0, H);
+gradient.addColorStop(0, colors[0]);
+gradient.addColorStop(0.65, colors[1]);
+gradient.addColorStop(1, colors[2]);
+
+ctx.fillStyle = gradient;
+ctx.fillRect(0, 0, W, H);
+
+// نجوم ثابتة بالنسبة للكاميرا لتجنب اهتزاز الخلفية.
+for (let i = 0; i < 50; i++) {
+  const sx = ((i * 137 + 43) % W);
+  const sy = ((i * 71 + 19) % Math.max(1, H * 0.75));
+
+  ctx.globalAlpha = 0.25 + ((i % 4) * 0.15);
+  ctx.fillStyle = i % 5 === 0 ? COLORS.cyan : "#ffffff";
+  ctx.fillRect(sx, sy, i % 7 === 0 ? 2 : 1, i % 7 === 0 ? 2 : 1);
+}
+
+ctx.globalAlpha = 1;
+
+// جبال متعددة الطبقات.
+for (let layer = 0; layer < 3; layer++) {
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+
+  const baseY = H * (0.59 + layer * 0.12);
+  const parallax = state.cameraX * (0.12 + layer * 0.13);
+
+  for (let x = -100; x <= W + 100; x += 100) {
+    const worldX = x + parallax;
+    const height = 25 + ((Math.floor(worldX / 100) * 37 + layer * 29) % 85);
+    ctx.lineTo(x, baseY - height);
+  }
+
+  ctx.lineTo(W, H);
+  ctx.closePath();
+
+  ctx.globalAlpha = 0.24 + layer * 0.12;
+  ctx.fillStyle = layer === 0 ? "#a99aff" :
+    layer === 1 ? "#6679ae" : "#243456";
+  ctx.fill();
+}
+
+ctx.globalAlpha = 1;
+
+}
+
+function drawTile(x, y, tile) {
+const px = x * TILE;
+const py = y * TILE;
+
+if (tile === "#") {
+  const world = worldNumber();
+
+  const base = world === 0 ? "#253d48" :
+    world === 1 ? "#49364e" : "#24496a";
+
+  ctx.fillStyle = base;
+  ctx.fillRect(px, py, TILE, TILE);
+
+  ctx.fillStyle = "rgba(255,255,255,0.055)";
+  ctx.fillRect(px + 2, py + 2, TILE - 4, 4);
+
+  ctx.fillStyle = "rgba(0,0,0,0.15)";
+  ctx.fillRect(px, py + TILE - 5, TILE, 5);
+
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.strokeRect(px + 0.5, py + 0.5, TILE - 1, TILE - 1);
+
+  if ((x + y) % 4 === 0) {
+    ctx.fillStyle = "rgba(255,255,255,0.12)";
+    ctx.fillRect(px + 12, py + 15, 3, 3);
+    ctx.fillRect(px + 34, py + 31, 4, 2);
+  }
+} else if (tile === "^" || tile === "!") {
+  ctx.fillStyle = COLORS.red;
+
+  ctx.beginPath();
+  ctx.moveTo(px + 3, py + TILE);
+  ctx.lineTo(px + TILE / 2, py + 5);
+  ctx.lineTo(px + TILE - 3, py + TILE);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#ffe4e6";
+  ctx.beginPath();
+  ctx.moveTo(px + TILE / 2, py + 5);
+  ctx.lineTo(px + TILE / 2 + 4, py + 20);
+  ctx.lineTo(px + TILE / 2 - 1, py + 17);
+  ctx.closePath();
+  ctx.fill();
+} else if ("abc".includes(tile) && tile !== " ") {
+  if (!state.doorsOpen[tile]) {
+    ctx.fillStyle = "#32294f";
+    roundedRect(px + 5, py + 2, TILE - 10, TILE - 2, 8);
+    ctx.fill();
+
+    ctx.strokeStyle = COLORS.purple;
+    ctx.lineWidth = 2;
     ctx.stroke();
-
-    ctx.fillStyle = world.accent;
-    ctx.beginPath();
-    ctx.arc(x + TILE / 2, y + 23, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  function drawPlate(x, y, symbol, active, world) {
-    const plateColor = active ? COLORS.green : world.accent;
-
-    ctx.save();
-
-    ctx.shadowColor = plateColor;
-    ctx.shadowBlur = active ? 15 : 4;
-
-    fillRounded(
-      x + 5,
-      y + TILE - 11,
-      TILE - 10,
-      8,
-      4,
-      active ? "#92f5b2" : "#637b98"
-    );
-
-    ctx.restore();
-
-    ctx.fillStyle = active ? COLORS.green : "#d3e4ff";
-    ctx.font = "bold 12px Cairo";
-    ctx.textAlign = "center";
-    ctx.fillText(symbol, x + TILE / 2, y + TILE - 16);
-  }
-
-  function drawSpikes(x, y) {
-    ctx.save();
-
-    ctx.fillStyle = "#28324b";
-    ctx.fillRect(x, y + TILE - 8, TILE, 8);
-
-    const gradient = ctx.createLinearGradient(x, y + 12, x, y + TILE);
-    gradient.addColorStop(0, "#ffd6e0");
-    gradient.addColorStop(1, "#e64f7a");
-
-    ctx.fillStyle = gradient;
-
-    ctx.beginPath();
-
-    const count = 4;
-    const spikeWidth = TILE / count;
-
-    for (let i = 0; i < count; i++) {
-      const sx = x + i * spikeWidth;
-
-      ctx.moveTo(sx, y + TILE - 7);
-      ctx.lineTo(sx + spikeWidth / 2, y + 13);
-      ctx.lineTo(sx + spikeWidth, y + TILE - 7);
-    }
-
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(255,255,255,0.35)";
-    ctx.lineWidth = 1;
-
-    for (let i = 0; i < count; i++) {
-      const sx = x + i * spikeWidth;
-      line(
-        sx + 3,
-        y + TILE - 12,
-        sx + spikeWidth / 2,
-        y + 18,
-        "rgba(255,255,255,0.3)",
-        1
-      );
-    }
-
-    ctx.restore();
-  }
-
-  function drawGem(gem) {
-    const pulse = 1 + Math.sin(state.time * 0.005 + gem.x) * 0.1;
-
-    ctx.save();
-    ctx.translate(gem.x - state.cameraX, gem.y);
-    ctx.scale(pulse, pulse);
-
-    ctx.shadowColor = COLORS.gold;
-    ctx.shadowBlur = 15;
 
     ctx.fillStyle = COLORS.gold;
     ctx.beginPath();
-    ctx.moveTo(0, -11);
-    ctx.lineTo(9, -2);
-    ctx.lineTo(0, 11);
-    ctx.lineTo(-9, -2);
-    ctx.closePath();
+    ctx.arc(px + TILE / 2, py + TILE / 2, 4, 0, Math.PI * 2);
     ctx.fill();
+  }
+} else if (["1", "2", "3"].includes(tile)) {
+  const active = state.plates[tile];
 
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = "#fff2c7";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+  ctx.fillStyle = active ? COLORS.green : COLORS.purple;
+  ctx.shadowBlur = active ? 15 : 6;
+  ctx.shadowColor = ctx.fillStyle;
 
-    ctx.restore();
+  roundedRect(px + 7, py + TILE - 13, TILE - 14, 8, 4);
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+} else if (tile === "E") {
+  const glow = 0.7 + Math.sin(state.frame * 0.07) * 0.2;
+
+  ctx.save();
+  ctx.globalAlpha = glow;
+  ctx.shadowBlur = 24;
+  ctx.shadowColor = COLORS.cyan;
+  ctx.strokeStyle = COLORS.cyan;
+  ctx.lineWidth = 4;
+
+  roundedRect(px + 9, py + 3, TILE - 18, TILE - 4, 14);
+  ctx.stroke();
+
+  ctx.restore();
+
+  ctx.fillStyle = "rgba(103,232,249,0.12)";
+  roundedRect(px + 13, py + 7, TILE - 26, TILE - 12, 10);
+  ctx.fill();
+}
+
+}
+
+function drawGems() {
+for (const gem of state.gems) {
+if (gem.taken) continue;
+
+  const y = gem.y + Math.sin(state.frame * 0.06 + gem.phase) * 4;
+
+  ctx.save();
+  ctx.translate(gem.x, y);
+  ctx.rotate(Math.sin(state.frame * 0.025 + gem.phase) * 0.2);
+
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = COLORS.gold;
+  ctx.fillStyle = COLORS.gold;
+
+  ctx.beginPath();
+  ctx.moveTo(0, -10);
+  ctx.lineTo(8, 0);
+  ctx.lineTo(0, 10);
+  ctx.lineTo(-8, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#fff7d6";
+  ctx.fillRect(-1, -6, 2, 5);
+
+  ctx.restore();
+}
+
+}
+
+function drawPowerups() {
+for (const power of state.powerups) {
+if (power.taken) continue;
+
+  const y = power.y + Math.sin(state.frame * 0.05 + power.phase) * 4;
+
+  ctx.save();
+  ctx.translate(power.x, y);
+
+  ctx.shadowBlur = 16;
+  ctx.shadowColor = power.type === "shield" ? COLORS.cyan : COLORS.green;
+
+  ctx.fillStyle = power.type === "shield" ? "#164e63" : "#14532d";
+  roundedRect(-13, -13, 26, 26, 8);
+  ctx.fill();
+
+  ctx.strokeStyle = power.type === "shield" ? COLORS.cyan : COLORS.green;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+  ctx.font = "16px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(power.type === "shield" ? "◆" : "⚡", 0, 1);
+
+  ctx.restore();
+}
+
+}
+
+function drawMovers() {
+for (const mover of state.movers) {
+const gradient = ctx.createLinearGradient(
+mover.x, mover.y, mover.x, mover.y + mover.h
+);
+
+  gradient.addColorStop(0, COLORS.cyan);
+  gradient.addColorStop(1, "#6366f1");
+
+  ctx.fillStyle = gradient;
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = COLORS.cyan;
+
+  roundedRect(
+    mover.x - state.cameraX,
+    mover.y,
+    mover.w,
+    mover.h,
+    6
+  );
+
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+}
+
+function drawPlayer(player, ghost = false) {
+const x = player.x - state.cameraX;
+const y = player.y;
+
+if (x < -80 || x > W + 80) return;
+
+ctx.save();
+
+if (ghost) {
+  ctx.globalAlpha = 0.42;
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = COLORS.cyan;
+} else if (player.invulnerable > 0 && state.frame % 8 < 4) {
+  ctx.globalAlpha = 0.35;
+}
+
+if (!ghost && player.shield > 0) {
+  ctx.strokeStyle = COLORS.cyan;
+  ctx.lineWidth = 3;
+  ctx.globalAlpha = 0.65 + Math.sin(state.frame * 0.15) * 0.2;
+
+  ctx.beginPath();
+  ctx.ellipse(x + player.w / 2, y + player.h / 2, 23, 28, 0, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+// الجسم.
+const bodyGradient = ctx.createLinearGradient(x, y, x + player.w, y + player.h);
+bodyGradient.addColorStop(0, ghost ? "#a5f3fc" : "#c4b5fd");
+bodyGradient.addColorStop(1, ghost ? "#38bdf8" : "#7c3aed");
+
+ctx.fillStyle = bodyGradient;
+roundedRect(x, y + 8, player.w, player.h - 8, 9);
+ctx.fill();
+
+// الرأس.
+ctx.fillStyle = ghost ? "#e0faff" : "#ffdfbd";
+ctx.beginPath();
+ctx.arc(x + player.w / 2, y + 8, 11, 0, Math.PI * 2);
+ctx.fill();
+
+// غطاء الرأس.
+ctx.fillStyle = ghost ? "#67e8f9" :
+  (state.character === "layan" ? "#ec4899" : "#4f46e5");
+
+ctx.beginPath();
+ctx.arc(x + player.w / 2, y + 5, 11, Math.PI, Math.PI * 2);
+ctx.fill();
+
+// العينان.
+ctx.fillStyle = "#111827";
+const eyeX = player.facing >= 0 ? x + 18 : x + 9;
+
+ctx.beginPath();
+ctx.arc(eyeX, y + 9, 1.5, 0, Math.PI * 2);
+ctx.fill();
+
+// تفاصيل اللباس.
+ctx.fillStyle = ghost ? "#e0faff" : COLORS.cyan;
+ctx.fillRect(x + 5, y + 20, player.w - 10, 3);
+
+// القدمين.
+ctx.fillStyle = ghost ? "#bae6fd" : "#27234a";
+
+const step = Math.sin(player.anim || 0) * 3;
+
+ctx.fillRect(x + 3, y + player.h - 5, 9, 6 + step);
+ctx.fillRect(x + player.w - 12, y + player.h - 5, 9, 6 - step);
+
+ctx.restore();
+
+}
+
+function drawPlatesAndDoors() {
+for (let y = 0; y < state.rows; y++) {
+for (let x = 0; x < state.cols; x++) {
+drawTile(x, y, getTile(x, y));
+}
+}
+}
+
+function drawEffects() {
+for (const particle of state.particles) {
+ctx.save();
+ctx.globalAlpha = Math.max(0, particle.life / particle.maxLife);
+ctx.fillStyle = particle.color;
+
+  ctx.beginPath();
+  ctx.arc(
+    particle.x - state.cameraX,
+    particle.y,
+    particle.size,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  ctx.restore();
+}
+
+ctx.textAlign = "center";
+ctx.font = "bold 15px Cairo, Arial";
+
+for (const text of state.floatingTexts) {
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, text.life / 15);
+  ctx.fillStyle = text.color;
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = "#000";
+
+  ctx.fillText(
+    text.text,
+    text.x - state.cameraX,
+    text.y
+  );
+
+  ctx.restore();
+}
+
+}
+
+function render() {
+ctx.save();
+
+if (state.shake > 0.5) {
+  ctx.translate(
+    (Math.random() - 0.5) * state.shake,
+    (Math.random() - 0.5) * state.shake
+  );
+}
+
+drawBackground();
+
+if (state.level) {
+  drawPlatesAndDoors();
+  drawMovers();
+  drawGems();
+  drawPowerups();
+
+  for (const ghost of state.ghosts) {
+    drawPlayer(ghost, true);
   }
 
-  function drawMap() {
-    const world = getWorld();
-
-    const startCol = Math.max(0, Math.floor(state.cameraX / TILE) - 1);
-    const endCol = Math.min(COLS, Math.ceil((state.cameraX + W) / TILE) + 1);
-
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = startCol; x < endCol; x++) {
-        const symbol = getTile(x, y);
-
-        const px = x * TILE - state.cameraX;
-        const py = y * TILE;
-
-        if (symbol === "#") {
-          drawGround(px, py, world);
-        } else if (symbol === "^") {
-          drawSpikes(px, py);
-        } else if (["a", "b", "c"].includes(symbol)) {
-          drawDoor(px, py, state.doorOpen.has(symbol), world);
-        } else if (["1", "2", "3"].includes(symbol)) {
-          drawPlate(
-            px,
-            py,
-            symbol,
-            state.activePlates.has(symbol),
-            world
-          );
-        } else if (symbol === "E") {
-          drawExit(px, py, world);
-        }
-      }
-    }
-
-    if (level?._gemLocations) {
-      for (const gem of level._gemLocations) {
-        if (!gem.collected) drawGem(gem);
-      }
-    }
-  }
-
-  function drawExit(x, y, world) {
-    const pulse = Math.sin(state.time * 0.004) * 3;
-
-    ctx.save();
-
-    ctx.shadowColor = world.accent;
-    ctx.shadowBlur = 17 + pulse;
-
-    fillRounded(x + 7, y + 4, TILE - 14, TILE - 4, 9, "#151b34");
-
-    ctx.shadowBlur = 0;
-
-    ctx.strokeStyle = world.accent;
-    ctx.lineWidth = 3;
-
-    roundedRect(x + 7, y + 4, TILE - 14, TILE - 4, 9);
-    ctx.stroke();
-
-    ctx.fillStyle = world.accent;
-    ctx.globalAlpha = 0.8;
-
-    ctx.beginPath();
-    ctx.ellipse(
-      x + TILE / 2,
-      y + TILE / 2,
-      7 + pulse / 3,
-      13 + pulse / 3,
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-
-    ctx.globalAlpha = 1;
-    ctx.restore();
-  }
-
-  /* =====================================================
-     رسم الشخصيات
-  ===================================================== */
-
-  function drawCharacter(x, y, facing = 1, frame = 0, ghost = false) {
-    ctx.save();
-
-    const walking = Math.abs(player.vx) > 0.2 && !ghost;
-    const legSwing = walking ? Math.sin(frame * 2.3) * 4 : 0;
-    const bob = walking ? Math.abs(Math.sin(frame * 2.3)) * 2 : 0;
-
-    ctx.translate(x + player.w / 2, y + player.h / 2 + bob);
-
-    if (facing < 0) ctx.scale(-1, 1);
-
-    const bodyColor = state.character === "layan" ? "#c58bff" : "#68d8ff";
-    const suitColor = ghost ? "#83f7ff" : bodyColor;
-    const outlineColor = ghost ? "#e4ffff" : "#26314f";
-
-    // الظل تحت الشخصية.
-    if (!ghost) {
-      ctx.globalAlpha = 0.22;
-      ctx.fillStyle = "#000";
-      ctx.beginPath();
-      ctx.ellipse(0, player.h / 2 + 2, 14, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-
-    // الرجلان.
-    fillRounded(-10, 7 + legSwing * 0.35, 8, 13, 4, outlineColor);
-    fillRounded(2, 7 - legSwing * 0.35, 8, 13, 4, outlineColor);
-
-    fillRounded(-9, 9 + legSwing * 0.35, 6, 9, 3, suitColor);
-    fillRounded(3, 9 - legSwing * 0.35, 6, 9, 3, suitColor);
-
-    // الجسم.
-    ctx.fillStyle = outlineColor;
-    roundedRect(-12, -7, 24, 22, 8);
-    ctx.fill();
-
-    ctx.fillStyle = suitColor;
-    roundedRect(-10, -6, 20, 19, 7);
-    ctx.fill();
-
-    // الصدر.
-    fillRounded(-5, -1, 10, 7, 3, ghost ? "#ffffff" : "#e8f7ff");
-
-    // الذراعان.
-    fillRounded(-15, -4, 6, 15, 3, outlineColor);
-    fillRounded(9, -4, 6, 15, 3, outlineColor);
-
-    fillRounded(-14, -3, 4, 12, 2, suitColor);
-    fillRounded(10, -3, 4, 12, 2, suitColor);
-
-    // الرأس.
-    ctx.fillStyle = outlineColor;
-    ctx.beginPath();
-    ctx.arc(0, -13, 13, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = ghost ? "#c9ffff" : "#f2c5a3";
-    ctx.beginPath();
-    ctx.arc(0, -13, 11, 0, Math.PI * 2);
-    ctx.fill();
-
-    // الشعر.
-    ctx.fillStyle = state.character === "layan" ? "#432a68" : "#24314a";
-
-    ctx.beginPath();
-    ctx.arc(-1, -17, 11, Math.PI, Math.PI * 2);
-    ctx.lineTo(10, -13);
-    ctx.lineTo(6, -19);
-    ctx.lineTo(0, -21);
-    ctx.lineTo(-8, -17);
-    ctx.closePath();
-    ctx.fill();
-
-    // العين.
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.ellipse(4, -13, 3, 3.7, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#18233b";
-    ctx.beginPath();
-    ctx.arc(5, -13, 1.6, 0, Math.PI * 2);
-    ctx.fill();
-
-    // وهج الشبح.
-    if (ghost) {
-      ctx.strokeStyle = "rgba(120,245,255,0.8)";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(0, -7, 20, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    ctx.restore();
-  }
-
-  function drawPlayer() {
-    if (
-      player.invulnerable > 0 &&
-      Math.floor(player.invulnerable / 5) % 2 === 0
-    ) {
-      return;
-    }
-
-    drawCharacter(
-      player.x - state.cameraX,
-      player.y,
-      player.facing,
-      player.frame,
-      false
-    );
-  }
-
-  /* =====================================================
-     واجهة داخل اللعبة
-  ===================================================== */
-
-  function drawGameOverlay() {
-    // اسم العالم والمرحلة أعلى ساحة اللعب.
-    ctx.save();
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, 54);
-    gradient.addColorStop(0, "rgba(5,10,22,0.58)");
-    gradient.addColorStop(1, "rgba(5,10,22,0)");
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, W, 54);
-
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-
-    ctx.fillStyle = "#f4f7ff";
-    ctx.font = "bold 16px Cairo";
-    ctx.fillText(`${getWorld().icon} ${getWorld().name}`, 20, 23);
-
-    ctx.fillStyle = "rgba(240,246,255,0.7)";
-    ctx.font = "12px Cairo";
-    ctx.fillText(`المرحلة ${getLevelNumber()} / 10`, 20, 43);
-
-    // عداد الأشباح.
-    if (state.ghosts.length > 0) {
-      ctx.textAlign = "right";
-      ctx.font = "bold 13px Cairo";
-      ctx.fillStyle = COLORS.cyan;
-      ctx.fillText(`👻 ${state.ghosts.length}`, W - 20, 26);
-    }
-
-    ctx.restore();
-  }
-
-  /* =====================================================
-     الإطار الرئيسي للرسم
-  ===================================================== */
-
-  function render() {
-    ctx.save();
-
-    if (state.shake > 0) {
-      ctx.translate(
-        random(-state.shake, state.shake),
-        random(-state.shake, state.shake)
-      );
-    }
-
-    drawBackground();
-    drawMap();
-    drawGhosts();
-    drawPlayer();
-    drawParticles();
-    drawGameOverlay();
-
-    if (state.flash > 0) {
-      ctx.fillStyle = `rgba(255,100,130,${state.flash * 0.012})`;
-      ctx.fillRect(0, 0, W, H);
-    }
-
-    ctx.restore();
-  }
-
-  /* =====================================================
-     بدء اللعبة
-  ===================================================== */
-
-  function startGame() {
-    if (ui.start) ui.start.classList.remove("show");
-    if (ui.win) ui.win.classList.remove("show");
-
-    state.running = true;
-    state.won = false;
-    state.paused = false;
-
-    if (audioContext?.state === "suspended") {
-      audioContext.resume();
-    }
-
-    playSound(520, 0.1, "triangle");
-  }
-
-  if (ui.startButton) {
-    ui.startButton.addEventListener("click", () => {
-      startGame();
-    });
-  }
-
-  /* =====================================================
-     حلقة التشغيل
-  ===================================================== */
-
-  function gameLoop(timestamp) {
-    if (!lastTime) lastTime = timestamp;
-
-    const dt = Math.min(timestamp - lastTime, 34);
-    lastTime = timestamp;
-
-    update(dt);
-    render();
-
-    animationId = requestAnimationFrame(gameLoop);
-  }
-
-  /* =====================================================
-     تهيئة اللعبة
-  ===================================================== */
-
-  function init() {
-    loadSave();
-
-    createBackgroundObjects();
-    loadLevel(state.levelIndex, { silent: true });
-    chooseCharacter(state.character);
-
-    // عرض القائمة الرئيسية حتى يضغط اللاعب على ابدأ.
-    state.running = false;
-
-    if (ui.start) ui.start.classList.add("show");
-
-    // إعداد الصوت من زر الواجهة.
-    const soundButton = $("soundToggle");
-
-    if (soundButton) {
-      soundButton.addEventListener("click", () => {
-        state.muted = window.gameMuted === true;
-      });
-    }
-
-    // منع تمرير الصفحة عند استخدام أزرار الحركة.
-    document.querySelectorAll(".control-btn").forEach(button => {
-      button.addEventListener("contextmenu", event => {
-        event.preventDefault();
-      });
-    });
-
-    updateHUD();
-
-    if (!animationId) {
-      animationId = requestAnimationFrame(gameLoop);
-    }
-
-    console.log("YOUR OLD VERSION initialized successfully.");
-    console.log("Levels:", LEVELS.length);
-    console.log("Character:", state.character);
-  }
-
-  init();
-
-})(); 
+  if (state.player) drawPlayer(state.player);
+  drawEffects();
+}
+
+ctx.restore();
+
+}
+
+function gameLoop() {
+update();
+render();
+requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+if (!levels.length) {
+showHint("تعذر تحميل المراحل. تأكد من ملف levels.js.");
+return;
+}
+
+const savedCharacter = localStorage.getItem(CHARACTER_KEY);
+const selected = document.querySelector("[data-character].selected");
+
+state.character =
+  selected?.dataset.character ||
+  savedCharacter ||
+  "adam";
+
+state.lives = 3;
+state.running = true;
+state.paused = false;
+
+loadLevel(state.levelIndex, true);
+hideOverlay("o1");
+hideOverlay("gameOver");
+hideOverlay("o2");
+
+canvas.focus();
+sound(520, 0.08);
+
+}
+
+function restartLevel() {
+state.ghosts = [];
+state.recording = [];
+state.lives = 3;
+state.running = true;
+state.paused = false;
+
+loadLevel(state.levelIndex, true);
+hideOverlay("gameOver");
+hideOverlay("o2");
+hideOverlay("o1");
+
+}
+
+function nextLevel() {
+if (state.levelIndex >= levels.length - 1) {
+state.levelIndex = 0;
+state.score = 0;
+state.totalGems = 0;
+} else {
+state.levelIndex++;
+}
+
+state.lives = 3;
+state.running = true;
+state.ghosts = [];
+
+loadLevel(state.levelIndex, true);
+hideOverlay("o2");
+
+}
+
+// لوحة المفاتيح.
+window.addEventListener("keydown", event => {
+const keys = [
+"ArrowLeft", "ArrowRight", "ArrowUp",
+"ArrowDown", "Space"
+];
+
+if (keys.includes(event.code)) event.preventDefault();
+
+state.keys[event.code] = true;
+
+if (event.code === "Escape" && state.running) {
+  state.paused = !state.paused;
+  showHint(state.paused ? "اللعبة متوقفة مؤقتًا" : "رجعنا للعب!");
+}
+
+if (event.code === "KeyR" && state.gameOver) restartLevel();
+
+});
+
+window.addEventListener("keyup", event => {
+state.keys[event.code] = false;
+});
+
+window.addEventListener("blur", () => {
+state.keys = Object.create(null);
+state.pointerButtons = Object.create(null);
+});
+
+// تحكم باللمس والماوس مع دعم الضغط المستمر.
+function bindHoldButton(id, key) {
+const button = $(id);
+if (!button) return;
+
+const down = event => {
+  event.preventDefault();
+  state.pointerButtons[key] = true;
+
+  try {
+    button.setPointerCapture(event.pointerId);
+  } catch (_) {}
+};
+
+const up = event => {
+  event.preventDefault();
+  state.pointerButtons[key] = false;
+};
+
+button.addEventListener("pointerdown", down);
+button.addEventListener("pointerup", up);
+button.addEventListener("pointercancel", up);
+button.addEventListener("lostpointercapture", up);
+button.addEventListener("contextmenu", e => e.preventDefault());
+
+}
+
+bindHoldButton("left", "left");
+bindHoldButton("right", "right");
+bindHoldButton("jump", "jump");
+
+$("go")?.addEventListener("click", startGame);
+$("rs")?.addEventListener("click", restartLevel);
+$("nx")?.addEventListener("click", nextLevel);
+$("n2")?.addEventListener("click", nextLevel);
+$("winRestart")?.addEventListener("click", restartLevel);
+$("gameOverRestart")?.addEventListener("click", restartLevel);
+
+$("soundToggle")?.addEventListener("click", () => {
+state.muted = !state.muted;
+saveProgress();
+
+$("soundToggle").textContent = state.muted ? "🔇" : "🔊";
+showHint(state.muted ? "الصوت مكتوم" : "الصوت يعمل");
+
+});
+
+// دوال اختيارية للربط مع أجزاء أخرى من المشروع.
+window.restartLevel = restartLevel;
+window.startM11Game = startGame;
+window.nextM11Level = nextLevel;
+
+loadSave();
+
+if (levels.length) {
+loadLevel(state.levelIndex, true);
+}
+
+requestAnimationFrame(gameLoop);
+})();
