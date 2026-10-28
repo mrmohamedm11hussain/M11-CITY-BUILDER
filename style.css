@@ -1,1609 +1,1403 @@
-/* =====================================================
-   YOUR OLD VERSION — M11 EDITION
-   Premium Cartoon Adventure Interface
-   Responsive: Mobile / Tablet / Desktop
-===================================================== */
-
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+/* ==========================================
+YOUR OLD VERSION — M11 ORIGINAL GAME
+Modern Dark Cartoon Adventure UI
+========================================== */
 
 :root {
-  color-scheme: dark;
+color-scheme: dark;
 
-  --bg: #090d1b;
-  --bg-soft: #10172b;
-  --panel: rgba(19, 28, 49, 0.94);
-  --panel-light: #1a2740;
-  --border: rgba(177, 202, 255, 0.12);
+--bg: #090b16;
+--bg-soft: #111426;
+--panel: rgba(22, 26, 48, 0.88);
+--panel-light: rgba(32, 37, 66, 0.86);
 
-  --text: #f5f7ff;
-  --muted: #9baac8;
+--purple: #9b7bff;
+--purple-light: #c2aaff;
+--cyan: #63e5ff;
+--pink: #ff83cf;
+--green: #7af0b0;
+--gold: #ffd778;
 
-  --cyan: #67f2df;
-  --blue: #6e9dff;
-  --purple: #a58bff;
-  --gold: #ffd580;
-  --pink: #ff8db5;
-  --green: #8bf5ad;
+--text: #f4f3ff;
+--muted: #a4a8c6;
+--border: rgba(190, 184, 255, 0.16);
 
-  --radius-lg: 26px;
-  --radius-md: 18px;
-  --radius-sm: 12px;
-
-  --shadow: 0 22px 70px rgba(0, 0, 0, 0.3);
-  --screen-height: 100vh;
+--radius: 22px;
+--shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
 }
-
-/* ---------- أساسيات ---------- */
 
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-}
+  }
 
 html {
-  min-height: 100%;
-  background: var(--bg);
-  scroll-behavior: smooth;
+min-height: 100%;
+background: var(--bg);
+scroll-behavior: smooth;
 }
 
 body {
-  min-width: 320px;
-  min-height: 100vh;
-  margin: 0;
-  padding: 20px;
-  color: var(--text);
-  font-family: 'Cairo', sans-serif;
-  background:
-    radial-gradient(ellipse at 8% 8%, rgba(69, 105, 206, 0.16), transparent 35%),
-    radial-gradient(ellipse at 94% 18%, rgba(122, 80, 200, 0.15), transparent 30%),
-    radial-gradient(ellipse at 50% 100%, rgba(31, 119, 131, 0.10), transparent 45%),
-    #090d1b;
-  overflow-x: hidden;
-}
+margin: 0;
+min-height: 100vh;
+overflow-x: hidden;
 
-button,
-input {
-  font: inherit;
+background:
+radial-gradient(ellipse at 15% 10%, rgba(100, 77, 190, 0.15), transparent 36%),
+radial-gradient(ellipse at 90% 35%, rgba(39, 158, 192, 0.10), transparent 32%),
+linear-gradient(145deg, #090b16, #101126 55%, #0b1020);
+
+color: var(--text);
+font-family: "Cairo", Tahoma, Arial, sans-serif;
 }
 
 button {
-  color: inherit;
+font: inherit;
 }
 
-button:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 4px;
+button:focus-visible,
+a:focus-visible,
+canvas:focus-visible {
+outline: 3px solid var(--cyan);
+outline-offset: 4px;
 }
 
 button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+opacity: 0.45;
+cursor: not-allowed;
 }
 
-::selection {
-  color: #07121c;
-  background: var(--cyan);
+button,
+a {
+touch-action: manipulation;
 }
-
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #0b1020;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #35476b;
-  border-radius: 20px;
-}
-
-/* ---------- غلاف اللعبة ---------- */
 
 .game-shell {
-  position: relative;
-  isolation: isolate;
-  width: min(1500px, 100%);
-  min-height: calc(100vh - 40px);
-  margin: 0 auto;
-  padding: 24px;
-  overflow: hidden;
-  border: 1px solid rgba(177, 202, 255, 0.12);
-  border-radius: 32px;
-  background:
-    linear-gradient(145deg, rgba(20, 30, 53, 0.96), rgba(10, 15, 29, 0.98));
-  box-shadow:
-    0 35px 100px rgba(0, 0, 0, 0.35),
-    inset 0 1px rgba(255, 255, 255, 0.035);
+position: relative;
+isolation: isolate;
+width: min(1440px, 100%);
+min-height: 100vh;
+margin-inline: auto;
+padding: 0 34px;
+overflow: clip;
 }
 
-.game-shell::before,
-.game-shell::after {
-  position: absolute;
-  z-index: -1;
-  content: "";
-  pointer-events: none;
-  border-radius: 50%;
-  filter: blur(2px);
+/* الخلفية المتحركة */
+
+.ambient {
+position: absolute;
+z-index: -1;
+pointer-events: none;
+border-radius: 50%;
+filter: blur(85px);
+opacity: 0.23;
+animation: ambientFloat 12s ease-in-out infinite alternate;
 }
 
-.game-shell::before {
-  top: -240px;
-  right: -140px;
-  width: 460px;
-  height: 460px;
-  background: radial-gradient(circle, rgba(103, 242, 223, 0.07), transparent 68%);
+.ambient-one {
+top: 170px;
+right: -150px;
+width: 350px;
+height: 350px;
+background: #7255ff;
 }
 
-.game-shell::after {
-  bottom: -260px;
-  left: -150px;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(165, 139, 255, 0.09), transparent 68%);
+.ambient-two {
+top: 600px;
+left: -170px;
+width: 390px;
+height: 390px;
+background: #00bde8;
+animation-delay: -5s;
 }
 
-/* ---------- الشريط العلوي ---------- */
+@keyframes ambientFloat {
+from {
+transform: translate3d(0, 0, 0) scale(1);
+}
+
+to {
+transform: translate3d(35px, -30px, 0) scale(1.13);
+}
+}
+
+/* الرأس */
 
 .topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  min-height: 72px;
-  padding: 0 4px 20px;
-  border-bottom: 1px solid var(--border);
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 20px;
+
+min-height: 92px;
+border-bottom: 1px solid var(--border);
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: inherit;
-  text-decoration: none;
+display: inline-flex;
+align-items: center;
+gap: 13px;
+color: var(--text);
+text-decoration: none;
 }
 
 .brand-icon {
-  display: grid;
-  width: 54px;
-  height: 54px;
-  flex: 0 0 54px;
-  place-items: center;
-  color: var(--cyan);
-  font-family: 'Outfit', sans-serif;
-  font-size: 32px;
-  border: 1px solid rgba(103, 242, 223, 0.3);
-  border-radius: 18px;
-  background:
-    linear-gradient(145deg, rgba(103, 242, 223, 0.13), rgba(110, 157, 255, 0.08));
-  box-shadow: 0 0 28px rgba(103, 242, 223, 0.06);
+display: grid;
+place-items: center;
+width: 49px;
+height: 49px;
+
+font-size: 25px;
+border: 1px solid rgba(194, 170, 255, 0.3);
+border-radius: 17px;
+
+background: linear-gradient(
+145deg,
+rgba(155, 123, 255, 0.24),
+rgba(99, 229, 255, 0.09)
+);
+
+box-shadow: 0 0 35px rgba(155, 123, 255, 0.12);
 }
 
 .brand-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+display: flex;
+flex-direction: column;
+gap: 1px;
 }
 
 .brand-text strong {
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(17px, 2vw, 23px);
-  font-weight: 900;
-  letter-spacing: 1.1px;
-  line-height: 1.3;
+font-size: 16px;
+font-weight: 900;
+letter-spacing: 0.6px;
 }
 
 .brand-text small {
-  color: var(--muted);
-  font-size: 12px;
+color: var(--muted);
+font-size: 9px;
+letter-spacing: 2px;
 }
 
-.top-actions {
-  display: flex;
-  gap: 10px;
+.topbar-actions {
+display: flex;
+gap: 10px;
 }
 
-.icon-btn {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  place-items: center;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.035);
-  font-size: 23px;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.icon-btn:hover {
-  color: var(--cyan);
-  border-color: rgba(103, 242, 223, 0.35);
-  background: rgba(103, 242, 223, 0.08);
-  transform: translateY(-2px);
-}
-
-.icon-btn.muted {
-  color: #75819b;
-}
-
-/* ---------- توزيع المحتوى ---------- */
-
-.game-layout {
-  display: grid;
-  grid-template-columns: minmax(230px, 285px) minmax(0, 1fr);
-  align-items: start;
-  gap: 24px;
-  padding-top: 24px;
-}
-
-.side-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 17px;
-  min-width: 0;
-}
-
-.panel-heading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 2px 3px;
-  color: #dce5ff;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.status-dot,
-.live-indicator,
-.mini-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 12px rgba(139, 245, 173, 0.6);
-}
-
-.status-dot {
-  animation: pulse-dot 2s infinite;
-}
-
-/* ---------- بطاقة العالم ---------- */
-
-.world-card {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 112px;
-  padding: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(139, 245, 173, 0.17);
-  border-radius: var(--radius-md);
-  background:
-    radial-gradient(circle at 12% 100%, rgba(55, 180, 121, 0.19), transparent 60%),
-    linear-gradient(135deg, #1a3c3a, #15283a 75%);
-}
-
-.world-card::after {
-  position: absolute;
-  top: -30px;
-  left: -18px;
-  width: 100px;
-  height: 100px;
-  content: "";
-  border: 1px solid rgba(139, 245, 173, 0.1);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 14px rgba(139, 245, 173, 0.025),
-    0 0 0 29px rgba(139, 245, 173, 0.02);
-}
-
-.world-art {
-  display: grid;
-  width: 58px;
-  height: 65px;
-  flex: 0 0 58px;
-  place-items: center;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.075);
-  font-size: 32px;
-  filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.25));
-}
-
-.world-info {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
-}
-
-.eyebrow {
-  color: var(--cyan);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-}
-
-.world-info strong {
-  font-size: 16px;
-  font-weight: 900;
-  line-height: 1.5;
-}
-
-/* ---------- بطاقات الإحصائيات ---------- */
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-height: 115px;
-  padding: 15px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: linear-gradient(145deg, rgba(28, 41, 66, 0.83), rgba(17, 26, 45, 0.83));
-  transition: border-color 0.2s, transform 0.2s;
-}
-
-.stat-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(110, 157, 255, 0.35);
-}
-
-.stat-icon {
-  font-size: 21px;
-}
-
-.stat-label {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.stat-card strong {
-  color: var(--gold);
-  font-family: 'Outfit', 'Cairo', sans-serif;
-  font-size: 21px;
-  font-weight: 900;
-}
-
-/* ---------- شريط التقدم ---------- */
-
-.progress-card {
-  padding: 17px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: rgba(17, 26, 45, 0.75);
-}
-
-.progress-heading {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
-  color: #dce5ff;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-#progressText {
-  color: var(--cyan);
-  font-family: 'Outfit', sans-serif;
-}
-
-.progress-track {
-  height: 8px;
-  overflow: hidden;
-  border-radius: 20px;
-  background: #26334b;
-}
-
-.progress-fill {
-  width: 0%;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #67f2df, #6e9dff, #a58bff);
-  box-shadow: 0 0 15px rgba(103, 242, 223, 0.3);
-  transition: width 0.5s ease;
-}
-
-/* ---------- بطاقة التلميحة ---------- */
-
-.hint-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid rgba(255, 213, 128, 0.15);
-  border-radius: var(--radius-md);
-  background: linear-gradient(145deg, rgba(80, 63, 37, 0.24), rgba(34, 31, 39, 0.6));
-}
-
-.hint-icon {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-  place-items: center;
-  border-radius: 11px;
-  color: var(--gold);
-  background: rgba(255, 213, 128, 0.1);
-  font-size: 20px;
-}
-
-.hint-card strong {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--gold);
-  font-size: 12px;
-}
-
-.hint-card p {
-  margin: 0;
-  color: #c0c9dc;
-  font-size: 12px;
-  line-height: 1.9;
-}
-
-/* ---------- دليل التحكم ---------- */
-
-.controls-guide {
-  padding: 17px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: rgba(16, 24, 42, 0.7);
-}
-
-.controls-guide h3 {
-  margin: 0 0 14px;
-  font-size: 14px;
-}
-
-.guide-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 11px 0;
-}
-
-.guide-row > span {
-  flex: 1;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-kbd {
-  display: inline-grid;
-  min-width: 27px;
-  height: 27px;
-  padding: 0 6px;
-  place-items: center;
-  color: #e8edff;
-  border: 1px solid #354562;
-  border-bottom-width: 3px;
-  border-radius: 7px;
-  background: #202c45;
-  font-family: 'Outfit', sans-serif;
-  font-size: 11px;
-}
+.icon-button {
+display: grid;
+place-items: center;
+width: 43px;
+height: 43px;
 
-.guide-note {
-  margin: 14px 0 0;
-  color: #8291ae;
-  font-size: 11px;
-  line-height: 1.8;
-}
-
-.creator-credit {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 15px 12px 2px;
-  border-top: 1px solid var(--border);
-  color: #7e8eae;
-  font-size: 10px;
-}
-
-.creator-credit strong {
-  color: #c5d4f5;
-  font-family: 'Outfit', 'Cairo', sans-serif;
-  font-size: 12px;
-}
-
-/* ---------- منطقة اللعب ---------- */
-
-.play-area {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
-}
-
-.level-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  min-height: 56px;
-}
-
-.level-title {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  min-width: 0;
-}
-
-.live-indicator {
-  width: 9px;
-  height: 9px;
-}
-
-.level-title > div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.level-title strong {
-  color: #f1f4ff;
-  font-size: 15px;
-  font-weight: 900;
-}
-
-.level-title small {
-  color: #8c9ab8;
-  font-size: 11px;
-}
-
-.toolbar-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.small-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 39px;
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.035);
-  color: #cbd6f2;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.small-action:hover {
-  color: var(--cyan);
-  border-color: rgba(103, 242, 223, 0.4);
-  background: rgba(103, 242, 223, 0.07);
-}
-
-/* ---------- إطار ساحة اللعبة ---------- */
-
-.canvas-frame {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  isolation: isolate;
-  border: 1px solid rgba(160, 194, 255, 0.25);
-  border-radius: 23px;
-  background: #10192c;
-  box-shadow:
-    0 20px 55px rgba(0, 0, 0, 0.3),
-    0 0 0 5px rgba(255, 255, 255, 0.015);
-}
-
-.canvas-frame::before {
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 3px;
-  content: "";
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, var(--cyan), var(--purple), transparent);
-  opacity: 0.75;
-}
-
-#c {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  object-fit: contain;
-  background: #111a2c;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.canvas-decoration {
-  position: absolute;
-  z-index: 1;
-  width: 110px;
-  height: 110px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.decoration-one {
-  top: -78px;
-  right: -78px;
-  box-shadow: 0 0 0 13px rgba(255, 255, 255, 0.015);
-}
-
-.decoration-two {
-  bottom: -86px;
-  left: -75px;
-  box-shadow: 0 0 0 13px rgba(255, 255, 255, 0.015);
-}
-
-.canvas-bottom-bar {
-  position: absolute;
-  z-index: 3;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 15px;
-  color: #d3e1f7;
-  background: linear-gradient(0deg, rgba(5, 10, 20, 0.83), rgba(5, 10, 20, 0.15));
-  font-family: 'Outfit', 'Cairo', sans-serif;
-  font-size: 10px;
-  pointer-events: none;
-}
-
-.canvas-bottom-bar > span:first-child {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.mini-dot {
-  width: 6px;
-  height: 6px;
-}
-
-.canvas-bottom-bar b {
-  color: var(--cyan);
-}
-
-/* ---------- أزرار الهاتف ---------- */
-
-.mobile-controls {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 5px 4px;
-  direction: ltr;
-}
-
-.movement-controls {
-  display: flex;
-  gap: 12px;
-}
-
-.control-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(169, 196, 255, 0.23);
-  background: linear-gradient(145deg, #263854, #17243a);
-  box-shadow:
-    0 6px 0 #0d1525,
-    0 10px 22px rgba(0, 0, 0, 0.18),
-    inset 0 1px rgba(255, 255, 255, 0.08);
-  cursor: pointer;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  transition: transform 0.08s, box-shadow 0.08s, background 0.15s;
-}
+border: 1px solid var(--border);
+border-radius: 14px;
 
-.control-btn:active,
-.control-btn.pressed {
-  transform: translateY(4px);
-  box-shadow:
-    0 2px 0 #0d1525,
-    inset 0 2px 6px rgba(0, 0, 0, 0.2);
-  background: linear-gradient(145deg, #355274, #20314e);
-}
-
-.direction-btn {
-  width: 65px;
-  height: 59px;
-  border-radius: 17px;
-  color: #e8f0ff;
-  font-size: 24px;
-}
-
-.jump-btn {
-  flex-direction: column;
-  gap: 0;
-  width: 82px;
-  height: 73px;
-  border-color: rgba(103, 242, 223, 0.35);
-  border-radius: 23px;
-  color: #071b22;
-  background: linear-gradient(145deg, #8affec, #53d8cb);
-  box-shadow:
-    0 6px 0 #217e7d,
-    0 10px 25px rgba(72, 231, 209, 0.12);
-}
-
-.jump-btn:active,
-.jump-btn.pressed {
-  background: linear-gradient(145deg, #6de3d8, #40bdb4);
-  box-shadow: 0 2px 0 #217e7d;
-}
-
-.jump-btn span {
-  font-family: 'Outfit', sans-serif;
-  font-size: 27px;
-  font-weight: 900;
-  line-height: 1.1;
-}
+background: rgba(255, 255, 255, 0.035);
+color: var(--text);
+font-size: 20px;
 
-.jump-btn small {
-  font-size: 10px;
-  font-weight: 900;
+cursor: pointer;
+transition:
+transform 180ms ease,
+background 180ms ease,
+border-color 180ms ease;
 }
 
-/* ---------- بطاقات المزايا ---------- */
-
-.bottom-tips {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  padding-top: 3px;
-}
-
-.tip-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: 15px;
-  background: rgba(18, 27, 46, 0.67);
-  transition: transform 0.2s, border-color 0.2s;
-}
-
-.tip-item:hover {
-  transform: translateY(-3px);
-  border-color: rgba(165, 139, 255, 0.3);
+.icon-button:hover {
+transform: translateY(-2px);
+border-color: rgba(99, 229, 255, 0.5);
+background: rgba(99, 229, 255, 0.08);
 }
 
-.tip-symbol {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
-  place-items: center;
-  border-radius: 12px;
-  background: rgba(165, 139, 255, 0.09);
-  font-size: 20px;
-}
-
-.tip-item > span:last-child {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.tip-item strong {
-  color: #e5ebff;
-  font-size: 11px;
-  font-weight: 900;
-}
+/* المحتوى */
 
-.tip-item small {
-  color: #8595b4;
-  font-size: 10px;
-  line-height: 1.7;
+.main-content {
+width: 100%;
+max-width: 1120px;
+margin-inline: auto;
+padding: 32px 0 25px;
 }
 
-/* ---------- النوافذ المنبثقة ---------- */
+/* البطاقات والشاشات */
 
 .overlay {
-  position: fixed;
-  z-index: 1000;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  overflow-y: auto;
-  background: rgba(4, 7, 17, 0.84);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  animation: overlay-in 0.25s ease both;
+display: none;
+position: absolute;
+inset: 0;
+z-index: 20;
+
+align-items: center;
+justify-content: center;
+
+padding: 20px;
+background: rgba(5, 7, 17, 0.76);
+backdrop-filter: blur(13px);
+-webkit-backdrop-filter: blur(13px);
 }
 
 .overlay.show {
-  display: flex;
+display: flex;
+animation: overlayAppear 240ms ease both;
 }
 
-.dialog-card {
-  position: relative;
-  width: min(510px, 100%);
-  padding: 32px;
-  overflow: hidden;
-  border: 1px solid rgba(168, 195, 255, 0.2);
-  border-radius: 30px;
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(103, 242, 223, 0.09), transparent 55%),
-    linear-gradient(145deg, #17233d, #101729 70%);
-  box-shadow:
-    0 35px 100px rgba(0, 0, 0, 0.55),
-    inset 0 1px rgba(255, 255, 255, 0.06);
-  text-align: center;
-  animation: dialog-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+@keyframes overlayAppear {
+from {
+opacity: 0;
 }
 
-.dialog-decoration {
-  position: absolute;
-  top: -95px;
-  right: -55px;
-  width: 190px;
-  height: 190px;
-  border: 1px solid rgba(103, 242, 223, 0.1);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 17px rgba(103, 242, 223, 0.025),
-    0 0 0 35px rgba(103, 242, 223, 0.02);
-  pointer-events: none;
+to {
+opacity: 1;
+}
 }
 
-.game-emblem {
-  position: relative;
-  display: grid;
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 18px;
-  place-items: center;
+.screen-card {
+position: relative;
+width: min(100%, 590px);
+padding: 32px;
+
+border: 1px solid rgba(194, 170, 255, 0.23);
+border-radius: 28px;
+
+background:
+linear-gradient(145deg, rgba(31, 35, 65, 0.97), rgba(13, 16, 32, 0.98));
+
+box-shadow:
+0 35px 100px rgba(0, 0, 0, 0.55),
+inset 0 1px rgba(255, 255, 255, 0.05);
+
+text-align: center;
+animation: cardEnter 420ms cubic-bezier(.2, .8, .2, 1) both;
 }
 
-.emblem-symbol {
-  display: grid;
-  width: 72px;
-  height: 72px;
-  place-items: center;
-  border: 1px solid rgba(103, 242, 223, 0.3);
-  border-radius: 25px;
-  background: linear-gradient(145deg, rgba(103, 242, 223, 0.17), rgba(110, 157, 255, 0.12));
-  box-shadow: 0 0 35px rgba(103, 242, 223, 0.1);
-  font-size: 38px;
-  animation: float 3s ease-in-out infinite;
+@keyframes cardEnter {
+from {
+opacity: 0;
+transform: translateY(18px) scale(0.97);
 }
 
-.emblem-orbit {
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgba(103, 242, 223, 0.18);
-  border-radius: 50%;
-  animation: orbit 12s linear infinite;
+to {
+opacity: 1;
+transform: translateY(0) scale(1);
+}
 }
 
-.orbit-two {
-  inset: 8px -6px;
-  border-color: rgba(165, 139, 255, 0.2);
-  transform: rotate(55deg);
-  animation-duration: 16s;
-  animation-direction: reverse;
+/* شاشة البداية */
+
+.start-card {
+overflow: hidden;
 }
 
-.start-dialog > .eyebrow {
-  display: block;
-  margin-bottom: 10px;
+.start-card::before {
+content: "";
+position: absolute;
+top: -120px;
+left: 15%;
+width: 70%;
+height: 230px;
+
+background: rgba(130, 100, 255, 0.15);
+filter: blur(70px);
+pointer-events: none;
 }
 
-.start-dialog h1 {
-  margin: 0;
-  font-family: 'Outfit', 'Cairo', sans-serif;
-  font-size: clamp(35px, 8vw, 48px);
-  font-weight: 900;
-  letter-spacing: 1px;
-  line-height: 1.05;
+.hero-art {
+position: relative;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 24px;
+
+height: 142px;
+margin: -8px 0 13px;
+isolation: isolate;
 }
 
-.start-dialog h1 span {
-  color: var(--cyan);
-  text-shadow: 0 0 28px rgba(103, 242, 223, 0.13);
+.hero-orb {
+position: absolute;
+z-index: -1;
+border: 1px solid rgba(174, 155, 255, 0.24);
+border-radius: 50%;
 }
 
-.dialog-description {
-  max-width: 365px;
-  margin: 17px auto 22px;
-  color: #aab8d4;
-  font-size: 13px;
-  line-height: 2;
+.orb-one {
+width: 135px;
+height: 135px;
+background: radial-gradient(circle, rgba(129, 103, 255, 0.17), transparent 70%);
 }
 
-/* ---------- اختيار الشخصية ---------- */
+.orb-two {
+width: 190px;
+height: 92px;
+border-color: rgba(99, 229, 255, 0.17);
+transform: rotate(-25deg);
+}
+
+.hero-character,
+.hero-ghost {
+position: relative;
+display: grid;
+place-items: center;
+width: 74px;
+height: 84px;
+
+font-size: 45px;
+filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.35));
+animation: characterFloat 3s ease-in-out infinite;
+}
+
+.hero-character-left {
+animation-delay: -1s;
+}
+
+.hero-character-right {
+animation-delay: -2s;
+}
+
+.hero-ghost {
+font-size: 59px;
+filter: drop-shadow(0 0 22px rgba(99, 229, 255, 0.3));
+}
+
+@keyframes characterFloat {
+0%, 100% {
+transform: translateY(3px) rotate(-3deg);
+}
+
+50% {
+transform: translateY(-9px) rotate(3deg);
+}
+}
+
+.hero-star {
+position: absolute;
+color: var(--gold);
+animation: starPulse 2s ease-in-out infinite alternate;
+}
+
+.star-one {
+top: 13px;
+right: 21%;
+font-size: 20px;
+}
+
+.star-two {
+bottom: 19px;
+left: 20%;
+color: var(--cyan);
+font-size: 24px;
+animation-delay: -0.7s;
+}
+
+.star-three {
+top: 30px;
+left: 23%;
+font-size: 13px;
+animation-delay: -1.2s;
+}
+
+@keyframes starPulse {
+from {
+opacity: 0.45;
+transform: scale(0.8) rotate(0);
+}
+
+to {
+opacity: 1;
+transform: scale(1.15) rotate(20deg);
+}
+}
+
+.game-label {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 9px;
+
+padding: 7px 13px;
+border: 1px solid rgba(122, 240, 176, 0.2);
+border-radius: 30px;
+
+background: rgba(122, 240, 176, 0.06);
+color: #a7f5ca;
+font-size: 11px;
+font-weight: 700;
+}
+
+.status-dot,
+.live-indicator {
+display: inline-block;
+width: 7px;
+height: 7px;
+border-radius: 50%;
+background: var(--green);
+box-shadow: 0 0 12px rgba(122, 240, 176, 0.8);
+}
+
+.start-card h1 {
+margin: 18px 0 12px;
+font-family: Arial, sans-serif;
+font-size: clamp(30px, 5vw, 43px);
+line-height: 1.15;
+font-weight: 900;
+letter-spacing: -1.5px;
+direction: ltr;
+}
+
+.start-card h1 span {
+display: block;
+margin-top: 5px;
+
+background: linear-gradient(90deg, var(--purple-light), var(--cyan));
+-webkit-background-clip: text;
+background-clip: text;
+color: transparent;
+}
+
+.hero-description {
+max-width: 430px;
+margin: 15px auto 22px;
+color: var(--muted);
+font-size: 13px;
+line-height: 2;
+}
+
+/* الشخصيات */
 
 .character-section {
-  margin: 20px 0;
+margin: 20px 0 24px;
 }
 
 .character-section h2 {
-  margin: 0 0 13px;
-  color: #e1e9ff;
-  font-size: 13px;
-  font-weight: 800;
+margin: 0 0 13px;
+color: #d7d7f3;
+font-size: 13px;
+font-weight: 800;
 }
 
-.character-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+.character-options {
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 12px;
 }
 
 .character-option {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  min-width: 0;
-  padding: 17px 10px 14px;
-  border: 1px solid rgba(167, 191, 242, 0.15);
-  border-radius: 19px;
-  background: rgba(8, 14, 27, 0.5);
-  cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s, background 0.2s;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 5px;
+
+min-width: 0;
+padding: 15px 10px 12px;
+
+border: 1px solid var(--border);
+border-radius: 19px;
+
+background: rgba(255, 255, 255, 0.025);
+color: var(--text);
+
+cursor: pointer;
+transition:
+border-color 180ms ease,
+background 180ms ease,
+transform 180ms ease,
+box-shadow 180ms ease;
 }
 
 .character-option:hover {
-  transform: translateY(-3px);
-  border-color: rgba(103, 242, 223, 0.35);
+transform: translateY(-2px);
+background: rgba(155, 123, 255, 0.07);
 }
 
 .character-option.selected {
-  border-color: rgba(103, 242, 223, 0.65);
-  background: linear-gradient(145deg, rgba(103, 242, 223, 0.1), rgba(110, 157, 255, 0.06));
-  box-shadow: inset 0 0 25px rgba(103, 242, 223, 0.035);
+border-color: rgba(155, 123, 255, 0.8);
+
+background:
+linear-gradient(145deg, rgba(155, 123, 255, 0.15), rgba(99, 229, 255, 0.045));
+
+box-shadow:
+inset 0 0 25px rgba(155, 123, 255, 0.05),
+0 0 22px rgba(155, 123, 255, 0.08);
 }
 
 .character-avatar {
-  display: grid;
-  width: 63px;
-  height: 63px;
-  margin-bottom: 4px;
-  place-items: center;
-  border-radius: 20px;
-  background: linear-gradient(145deg, #273b59, #1b2941);
-  font-size: 35px;
-  transition: transform 0.25s;
+display: grid;
+place-items: center;
+width: 58px;
+height: 58px;
+
+border-radius: 18px;
+background: rgba(155, 123, 255, 0.1);
+font-size: 34px;
 }
 
-.character-option:hover .character-avatar {
-  transform: translateY(-3px) rotate(-3deg);
+.character-name {
+font-size: 14px;
+font-weight: 900;
 }
 
-.layan-avatar {
-  background: linear-gradient(145deg, #4a315d, #282443);
+.character-description {
+color: var(--muted);
+font-size: 10px;
 }
 
-.character-option strong {
-  color: #f0f4ff;
-  font-size: 14px;
+/* الأزرار */
+
+.primary-button,
+.secondary-button {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 12px;
+
+width: 100%;
+min-height: 53px;
+padding: 12px 18px;
+
+border: 0;
+border-radius: 16px;
+
+font-size: 14px;
+font-weight: 900;
+cursor: pointer;
+
+transition:
+transform 180ms ease,
+filter 180ms ease,
+box-shadow 180ms ease;
 }
 
-.character-option small {
-  color: #8f9fbe;
-  font-size: 10px;
+.primary-button {
+color: #0c0c1a;
+
+background: linear-gradient(105deg, #c0a5ff, #76e7ff);
+box-shadow: 0 10px 28px rgba(119, 171, 255, 0.2);
 }
 
-.character-check {
-  position: absolute;
-  top: 9px;
-  left: 9px;
-  display: grid;
-  width: 22px;
-  height: 22px;
-  place-items: center;
-  border-radius: 50%;
-  color: #071a20;
-  background: var(--cyan);
-  font-family: 'Outfit', sans-serif;
-  font-size: 12px;
-  font-weight: 900;
-  opacity: 0;
-  transform: scale(0.5);
-  transition: 0.2s ease;
+.primary-button:hover {
+transform: translateY(-2px);
+filter: brightness(1.08);
+box-shadow: 0 14px 32px rgba(119, 171, 255, 0.29);
 }
 
-.character-option.selected .character-check {
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* ---------- الأزرار الرئيسية ---------- */
-
-.primary-btn,
-.secondary-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 13px;
-  min-height: 51px;
-  padding: 12px 20px;
-  border: 1px solid transparent;
-  border-radius: 15px;
-  font-size: 13px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
-}
-
-.primary-btn {
-  color: #071a20;
-  background: linear-gradient(105deg, #83f8e6, #5edfd2);
-  box-shadow: 0 8px 25px rgba(72, 231, 209, 0.14);
-}
-
-.primary-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(72, 231, 209, 0.22);
-  filter: brightness(1.05);
-}
-
-.primary-btn:active,
-.secondary-btn:active {
-  transform: translateY(1px);
-}
-
-#go {
-  width: 100%;
-  justify-content: space-between;
-  padding-inline: 20px;
+.primary-button:active,
+.secondary-button:active,
+.control-button:active {
+transform: scale(0.96);
 }
 
 .button-arrow {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  place-items: center;
-  border-radius: 9px;
-  background: rgba(0, 0, 0, 0.09);
-  font-size: 18px;
+font-size: 21px;
+transition: transform 180ms ease;
+}
+
+.primary-button:hover .button-arrow {
+transform: translateX(-4px);
+}
+
+.secondary-button {
+margin-top: 10px;
+border: 1px solid var(--border);
+background: rgba(255, 255, 255, 0.045);
+color: var(--text);
+}
+
+.secondary-button:hover {
+border-color: rgba(194, 170, 255, 0.45);
+background: rgba(155, 123, 255, 0.09);
 }
 
 .start-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 19px;
-  color: #8494b3;
-  font-size: 10px;
+display: flex;
+justify-content: center;
+flex-wrap: wrap;
+gap: 15px;
+
+margin-top: 20px;
+color: var(--muted);
+font-size: 10px;
 }
 
-.start-footer i {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--purple);
+/* منطقة اللعب */
+
+.game-area {
+position: relative;
+width: 100%;
+min-width: 0;
+margin: 0 auto;
+overflow: hidden;
+
+border: 1px solid var(--border);
+border-radius: 24px;
+
+background: rgba(14, 17, 34, 0.78);
+box-shadow: var(--shadow);
 }
 
-/* ---------- شاشة الفوز ---------- */
+/* شريط المعلومات */
 
-.result-dialog {
-  width: min(450px, 100%);
-  padding-top: 38px;
+.game-hud {
+display: grid;
+grid-template-columns: repeat(4, minmax(0, 1fr));
+gap: 10px;
+
+padding: 17px;
+border-bottom: 1px solid var(--border);
+background: rgba(255, 255, 255, 0.018);
+}
+
+.hud-item {
+display: flex;
+align-items: center;
+gap: 10px;
+min-width: 0;
+}
+
+.hud-icon {
+display: grid;
+place-items: center;
+flex-shrink: 0;
+
+width: 39px;
+height: 39px;
+
+border: 1px solid var(--border);
+border-radius: 13px;
+
+background: rgba(155, 123, 255, 0.08);
+font-size: 19px;
+}
+
+.hud-item > div {
+display: flex;
+flex-direction: column;
+min-width: 0;
+}
+
+.hud-item small {
+color: var(--muted);
+font-size: 10px;
+}
+
+.hud-item strong {
+overflow: hidden;
+color: var(--text);
+font-size: 13px;
+font-weight: 900;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+
+.health-item .hud-icon {
+background: rgba(255, 131, 207, 0.08);
+}
+
+/* شريط التقدم */
+
+.progress-container {
+padding: 0 17px 15px;
+}
+
+.progress-track {
+width: 100%;
+height: 6px;
+overflow: hidden;
+
+border-radius: 10px;
+background: rgba(255, 255, 255, 0.07);
+}
+
+.progress-fill {
+width: 0%;
+height: 100%;
+border-radius: inherit;
+
+background: linear-gradient(90deg, var(--purple), var(--cyan));
+box-shadow: 0 0 15px rgba(99, 229, 255, 0.3);
+
+transition: width 180ms ease;
+}
+
+/* إطار Canvas */
+
+.canvas-frame {
+position: relative;
+margin: 0 15px;
+
+overflow: hidden;
+border: 1px solid rgba(166, 164, 255, 0.2);
+border-radius: 16px;
+
+background: #101329;
+box-shadow: inset 0 0 45px rgba(0, 0, 0, 0.3);
+}
+
+.canvas-top-decoration {
+position: absolute;
+z-index: 3;
+top: 10px;
+right: 12px;
+left: 12px;
+
+display: flex;
+align-items: center;
+gap: 8px;
+
+pointer-events: none;
+color: rgba(245, 244, 255, 0.77);
+font-family: Arial, sans-serif;
+font-size: 9px;
+font-weight: 700;
+letter-spacing: 1px;
+text-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
+}
+
+.canvas-world-name {
+margin-inline-start: auto;
+color: rgba(194, 170, 255, 0.9);
+}
+
+#c {
+display: block;
+width: 100%;
+height: auto;
+aspect-ratio: 800 / 440;
+
+background: #11162c;
+image-rendering: auto;
+
+outline: none;
+touch-action: none;
+user-select: none;
+-webkit-user-select: none;
+}
+
+.game-hint {
+position: absolute;
+z-index: 4;
+right: 50%;
+bottom: 12px;
+
+max-width: calc(100% - 30px);
+padding: 8px 14px;
+
+border: 1px solid rgba(194, 170, 255, 0.22);
+border-radius: 12px;
+
+background: rgba(9, 11, 22, 0.78);
+color: #fff;
+font-size: 11px;
+text-align: center;
+
+transform: translateX(50%);
+pointer-events: none;
+}
+
+/* شاشات الفوز والخسارة */
+
+.result-overlay {
+z-index: 10;
+border-radius: inherit;
+}
+
+.result-card {
+width: min(100%, 390px);
+padding: 28px 25px;
 }
 
 .result-icon {
-  display: grid;
-  width: 82px;
-  height: 82px;
-  margin: 0 auto 18px;
-  place-items: center;
-  border: 1px solid rgba(255, 213, 128, 0.3);
-  border-radius: 26px;
-  background: linear-gradient(145deg, rgba(255, 213, 128, 0.15), rgba(255, 141, 181, 0.07));
-  box-shadow: 0 0 35px rgba(255, 213, 128, 0.08);
-  font-size: 38px;
+display: grid;
+place-items: center;
+width: 76px;
+height: 76px;
+margin: 0 auto 17px;
+
+border: 1px solid rgba(255, 131, 207, 0.24);
+border-radius: 24px;
+
+background: rgba(255, 131, 207, 0.09);
+font-size: 37px;
+
+animation: resultIconFloat 2.6s ease-in-out infinite;
 }
 
-.result-dialog > .eyebrow {
-  display: block;
+.victory-icon {
+border-color: rgba(255, 215, 120, 0.27);
+background: rgba(255, 215, 120, 0.1);
 }
 
-.result-dialog h2 {
-  margin: 10px 0;
-  font-size: 24px;
-  font-weight: 900;
+@keyframes resultIconFloat {
+0%, 100% {
+transform: translateY(0) rotate(-3deg);
 }
 
-.result-dialog p {
-  margin: 0;
-  color: #aab8d4;
-  font-size: 13px;
-  line-height: 1.9;
+50% {
+transform: translateY(-6px) rotate(3deg);
+}
 }
 
-.result-divider {
-  height: 1px;
-  margin: 23px 0;
-  background: var(--border);
+.result-label {
+color: var(--purple-light);
+font-size: 11px;
+font-weight: 800;
 }
 
-.result-actions {
-  display: flex;
-  gap: 10px;
+.result-card h2 {
+margin: 9px 0;
+font-size: 24px;
+font-weight: 900;
 }
 
-.result-actions > button {
-  flex: 1;
-  min-width: 0;
-  padding-inline: 10px;
+.result-card p {
+margin: 0 0 20px;
+color: var(--muted);
+font-size: 12px;
+line-height: 1.9;
 }
 
-.secondary-btn {
-  color: #d9e4ff;
-  border-color: var(--border);
-  background: rgba(255, 255, 255, 0.04);
+.result-stats {
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 10px;
+
+margin-bottom: 20px;
 }
 
-.secondary-btn:hover {
-  border-color: rgba(165, 139, 255, 0.4);
-  background: rgba(165, 139, 255, 0.08);
+.result-stats > div {
+display: flex;
+flex-direction: column;
+gap: 3px;
+
+padding: 13px;
+border: 1px solid var(--border);
+border-radius: 14px;
+
+background: rgba(255, 255, 255, 0.025);
 }
 
-/* ---------- الحركة ---------- */
-
-@keyframes pulse-dot {
-  0%, 100% {
-    opacity: 1;
-    box-shadow: 0 0 12px rgba(139, 245, 173, 0.55);
-  }
-  50% {
-    opacity: 0.55;
-    box-shadow: 0 0 4px rgba(139, 245, 173, 0.2);
-  }
+.result-stats small {
+color: var(--muted);
+font-size: 10px;
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
+.result-stats strong {
+color: var(--gold);
+font-size: 20px;
 }
 
-@keyframes orbit {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* أزرار اللمس */
+
+.mobile-controls {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 20px;
+
+padding: 18px 20px 8px;
+direction: ltr;
 }
 
-@keyframes overlay-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.movement-controls,
+.action-controls {
+display: flex;
+align-items: center;
+gap: 11px;
 }
 
-@keyframes dialog-in {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.control-button {
+display: grid;
+place-items: center;
+flex-shrink: 0;
+
+width: 58px;
+height: 58px;
+
+border: 1px solid rgba(194, 170, 255, 0.2);
+border-radius: 19px;
+
+background: linear-gradient(
+145deg,
+rgba(155, 123, 255, 0.15),
+rgba(99, 229, 255, 0.055)
+);
+
+color: var(--text);
+font-size: 20px;
+
+box-shadow: inset 0 1px rgba(255, 255, 255, 0.035);
+
+cursor: pointer;
+user-select: none;
+-webkit-user-select: none;
+
+touch-action: none;
+transition:
+background 120ms ease,
+border-color 120ms ease,
+transform 120ms ease;
 }
 
-/* ---------- الشاشات المتوسطة ---------- */
-
-@media (max-width: 1050px) {
-  body {
-    padding: 12px;
-  }
-
-  .game-shell {
-    min-height: calc(100vh - 24px);
-    padding: 19px;
-    border-radius: 26px;
-  }
-
-  .game-layout {
-    grid-template-columns: minmax(190px, 230px) minmax(0, 1fr);
-    gap: 17px;
-  }
-
-  .side-panel {
-    gap: 12px;
-  }
-
-  .world-card {
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .world-art {
-    width: 48px;
-    height: 55px;
-    flex-basis: 48px;
-    font-size: 27px;
-  }
-
-  .world-info strong {
-    font-size: 13px;
-  }
-
-  .stat-card {
-    padding: 12px;
-  }
-
-  .bottom-tips {
-    gap: 8px;
-  }
-
-  .tip-item {
-    gap: 7px;
-    padding: 10px;
-  }
-
-  .tip-symbol {
-    width: 30px;
-    height: 30px;
-    flex-basis: 30px;
-    font-size: 17px;
-  }
-
-  .tip-item strong {
-    font-size: 10px;
-  }
-
-  .tip-item small {
-    font-size: 9px;
-  }
+.control-button:active {
+border-color: rgba(99, 229, 255, 0.75);
+background: rgba(99, 229, 255, 0.19);
 }
 
-/* ---------- الهاتف والتابلت الرأسي ---------- */
+.jump-button {
+width: 72px;
+height: 66px;
+gap: 0;
 
-@media (max-width: 760px) {
-  body {
-    padding: 0;
-  }
-
-  .game-shell {
-    width: 100%;
-    min-height: 100vh;
-    padding: 14px;
-    border: 0;
-    border-radius: 0;
-  }
-
-  .topbar {
-    min-height: 59px;
-    padding-bottom: 14px;
-  }
-
-  .brand {
-    gap: 10px;
-  }
-
-  .brand-icon {
-    width: 43px;
-    height: 43px;
-    flex-basis: 43px;
-    border-radius: 14px;
-    font-size: 26px;
-  }
-
-  .brand-text strong {
-    font-size: 16px;
-    letter-spacing: 0.4px;
-  }
-
-  .brand-text small {
-    font-size: 10px;
-  }
-
-  .top-actions {
-    gap: 7px;
-  }
-
-  .icon-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-  }
-
-  .game-layout {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    padding-top: 17px;
-  }
-
-  .play-area {
-    order: 1;
-    width: 100%;
-    gap: 13px;
-  }
-
-  .side-panel {
-    order: 2;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-    gap: 12px;
-    width: 100%;
-  }
-
-  .panel-heading,
-  .creator-credit {
-    grid-column: 1 / -1;
-  }
-
-  .panel-heading {
-    margin-top: 3px;
-  }
-
-  .world-card {
-    min-height: 94px;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .stat-card {
-    flex-direction: row;
-    align-items: center;
-    gap: 9px;
-    min-height: 43px;
-    padding: 9px 11px;
-  }
-
-  .stat-icon {
-    font-size: 17px;
-  }
-
-  .stat-label {
-    flex: 1;
-  }
-
-  .stat-card strong {
-    font-size: 16px;
-  }
-
-  .progress-card,
-  .hint-card,
-  .controls-guide {
-    min-width: 0;
-  }
-
-  .progress-card {
-    padding: 13px;
-  }
-
-  .hint-card {
-    padding: 12px;
-  }
-
-  .controls-guide {
-    padding: 13px;
-  }
-
-  .level-toolbar {
-    align-items: center;
-    gap: 8px;
-  }
-
-  .level-title strong {
-    font-size: 13px;
-  }
-
-  .level-title small {
-    font-size: 10px;
-  }
-
-  .toolbar-actions {
-    gap: 5px;
-  }
-
-  .small-action {
-    min-height: 35px;
-    padding: 0 9px;
-    font-size: 11px;
-  }
-
-  .small-action span {
-    display: none;
-  }
-
-  .canvas-frame {
-    border-radius: 16px;
-  }
-
-  #c {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-  }
-
-  .canvas-bottom-bar {
-    padding: 8px 10px;
-    font-size: 8px;
-  }
-
-  .mobile-controls {
-    display: flex;
-    padding: 5px 2px 10px;
-  }
-
-  .bottom-tips {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .tip-item {
-    padding: 11px;
-  }
-
-  .tip-item strong {
-    font-size: 11px;
-  }
-
-  .tip-item small {
-    font-size: 10px;
-  }
-
-  .creator-credit {
-    margin-top: 4px;
-  }
+border-color: rgba(99, 229, 255, 0.27);
+background: linear-gradient(
+145deg,
+rgba(99, 229, 255, 0.17),
+rgba(155, 123, 255, 0.12)
+);
 }
 
-/* ---------- الهاتف الصغير ---------- */
-
-@media (max-width: 400px) {
-  .game-shell {
-    padding: 10px;
-  }
-
-  .brand-text strong {
-    font-size: 13px;
-  }
-
-  .brand-text small {
-    font-size: 9px;
-  }
-
-  .brand-icon {
-    width: 38px;
-    height: 38px;
-    flex-basis: 38px;
-  }
-
-  .level-title {
-    gap: 7px;
-  }
-
-  .level-title strong {
-    font-size: 11px;
-  }
-
-  .level-title small {
-    font-size: 9px;
-  }
-
-  .small-action {
-    padding: 0 7px;
-    font-size: 10px;
-  }
-
-  .direction-btn {
-    width: 58px;
-    height: 54px;
-  }
-
-  .jump-btn {
-    width: 74px;
-    height: 66px;
-  }
-
-  .dialog-card {
-    padding: 24px 17px;
-    border-radius: 23px;
-  }
-
-  .start-dialog h1 {
-    font-size: 36px;
-  }
-
-  .dialog-description {
-    font-size: 12px;
-  }
-
-  .character-option {
-    padding: 12px 6px;
-  }
-
-  .character-avatar {
-    width: 53px;
-    height: 53px;
-    font-size: 29px;
-  }
-
-  .result-dialog h2 {
-    font-size: 20px;
-  }
-
-  .result-actions {
-    flex-direction: column;
-  }
+.jump-button span {
+font-size: 23px;
+line-height: 1;
 }
 
-/* ---------- وضع ملء الشاشة ---------- */
-
-.game-shell:fullscreen {
-  width: 100%;
-  height: 100%;
-  min-height: 100%;
-  padding: 12px;
-  overflow-y: auto;
-  border-radius: 0;
-  background: #090d1b;
+.jump-button small {
+font-size: 10px;
+font-weight: 800;
 }
 
-.game-shell:fullscreen .game-layout {
-  grid-template-columns: minmax(180px, 230px) minmax(0, 1fr);
+.control-help {
+display: flex;
+justify-content: center;
+flex-wrap: wrap;
+gap: 10px 22px;
+
+padding: 10px 15px 17px;
+color: var(--muted);
+font-size: 10px;
 }
 
-.game-shell:fullscreen .play-area {
-  min-width: 0;
+/* البطاقات التعريفية */
+
+.feature-strip {
+display: grid;
+grid-template-columns: repeat(3, minmax(0, 1fr));
+gap: 14px;
+
+margin-top: 22px;
 }
 
-.game-shell:fullscreen #c {
-  max-height: 67vh;
+.feature-card {
+display: flex;
+align-items: flex-start;
+gap: 13px;
+
+padding: 19px 15px;
+
+border: 1px solid var(--border);
+border-radius: 19px;
+
+background: linear-gradient(
+145deg,
+rgba(28, 32, 57, 0.7),
+rgba(15, 18, 36, 0.7)
+);
+
+transition:
+transform 200ms ease,
+border-color 200ms ease,
+background 200ms ease;
 }
 
-.game-shell:fullscreen .mobile-controls {
-  display: flex;
+.feature-card:hover {
+transform: translateY(-3px);
+border-color: rgba(155, 123, 255, 0.4);
+background: rgba(31, 35, 65, 0.8);
 }
+
+.feature-icon {
+display: grid;
+place-items: center;
+flex-shrink: 0;
+
+width: 43px;
+height: 43px;
+
+border: 1px solid var(--border);
+border-radius: 14px;
+
+background: rgba(155, 123, 255, 0.08);
+font-size: 21px;
+}
+
+.feature-card h3 {
+margin: 0 0 5px;
+font-size: 13px;
+font-weight: 900;
+}
+
+.feature-card p {
+margin: 0;
+color: var(--muted);
+font-size: 10px;
+line-height: 1.9;
+}
+
+/* التذييل */
+
+.site-footer {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 15px;
+
+min-height: 76px;
+margin-top: 10px;
+border-top: 1px solid var(--border);
+
+color: var(--muted);
+font-family: Arial, Tahoma, sans-serif;
+font-size: 10px;
+letter-spacing: 0.4px;
+}
+
+.site-footer strong {
+color: var(--purple-light);
+}
+
+/* الشاشات المتوسطة */
+
+@media (max-width: 850px) {
+.game-shell {
+padding-inline: 20px;
+}
+
+.main-content {
+padding-top: 22px;
+}
+
+.game-hud {
+gap: 7px;
+padding: 13px;
+}
+
+.hud-item {
+gap: 7px;
+}
+
+.hud-icon {
+width: 33px;
+height: 33px;
+border-radius: 11px;
+font-size: 16px;
+}
+
+.hud-item small {
+font-size: 9px;
+}
+
+.hud-item strong {
+font-size: 11px;
+}
+
+.feature-strip {
+gap: 9px;
+}
+
+.feature-card {
+gap: 9px;
+padding: 14px 10px;
+}
+
+.feature-icon {
+width: 35px;
+height: 35px;
+font-size: 18px;
+}
+}
+
+/* الموبايل */
+
+@media (max-width: 560px) {
+.game-shell {
+padding-inline: 12px;
+}
+
+.topbar {
+min-height: 72px;
+}
+
+.brand {
+gap: 9px;
+}
+
+.brand-icon {
+width: 40px;
+height: 40px;
+border-radius: 13px;
+font-size: 21px;
+}
+
+.brand-text strong {
+font-size: 12px;
+}
+
+.brand-text small {
+font-size: 8px;
+letter-spacing: 1px;
+}
+
+.icon-button {
+width: 38px;
+height: 38px;
+border-radius: 12px;
+}
+
+.main-content {
+padding-top: 15px;
+}
+
+.screen-card {
+padding: 22px 17px;
+border-radius: 22px;
+}
+
+.hero-art {
+height: 105px;
+gap: 12px;
+}
+
+.hero-character {
+width: 54px;
+height: 63px;
+font-size: 34px;
+}
+
+.hero-ghost {
+width: 58px;
+height: 65px;
+font-size: 47px;
+}
+
+.orb-one {
+width: 110px;
+height: 110px;
+}
+
+.orb-two {
+width: 155px;
+height: 75px;
+}
+
+.start-card h1 {
+font-size: clamp(27px, 8vw, 36px);
+}
+
+.hero-description {
+font-size: 11px;
+}
+
+.character-option {
+padding: 12px 7px;
+}
+
+.character-avatar {
+width: 48px;
+height: 48px;
+font-size: 29px;
+}
+
+.character-name {
+font-size: 12px;
+}
+
+.character-description {
+font-size: 9px;
+}
+
+.start-footer {
+gap: 9px;
+font-size: 9px;
+}
+
+.game-area {
+border-radius: 17px;
+}
+
+.game-hud {
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 12px 9px;
+padding: 12px;
+}
+
+.hud-item strong {
+font-size: 12px;
+}
+
+.progress-container {
+padding: 0 12px 12px;
+}
+
+.canvas-frame {
+margin-inline: 7px;
+border-radius: 11px;
+}
+
+.canvas-top-decoration {
+top: 7px;
+right: 8px;
+left: 8px;
+font-size: 7px;
+}
+
+.mobile-controls {
+padding: 13px 12px 5px;
+gap: 10px;
+}
+
+.movement-controls,
+.action-controls {
+gap: 8px;
+}
+
+.control-button {
+width: 49px;
+height: 49px;
+border-radius: 15px;
+font-size: 18px;
+}
+
+.jump-button {
+width: 58px;
+height: 56px;
+}
+
+.control-help {
+gap: 7px 13px;
+padding: 8px 8px 13px;
+font-size: 9px;
+}
+
+.feature-strip {
+grid-template-columns: 1fr;
+gap: 9px;
+margin-top: 13px;
+}
+
+.feature-card {
+align-items: center;
+padding: 12px;
+}
+
+.feature-card h3 {
+font-size: 12px;
+}
+
+.feature-card p {
+font-size: 10px;
+}
+
+.site-footer {
+flex-wrap: wrap;
+justify-content: center;
+gap: 8px 15px;
+padding: 16px 0;
+font-size: 9px;
+text-align: center;
+}
+
+.result-card h2 {
+font-size: 20px;
+}
+
+.result-card {
+padding: 22px 17px;
+}
+}
+
+/* الشاشات القصيرة والوضع الأفقي */
+
+@media (max-height: 520px) and (orientation: landscape) {
+.topbar {
+min-height: 55px;
+}
+
+.main-content {
+padding-top: 10px;
+}
+
+.start-card {
+max-width: 520px;
+padding: 15px 22px;
+}
+
+.hero-art {
+height: 72px;
+margin-top: 0;
+}
+
+.hero-character {
+height: 50px;
+font-size: 29px;
+}
+
+.hero-ghost {
+height: 50px;
+font-size: 39px;
+}
+
+.start-card h1 {
+margin-top: 8px;
+font-size: 27px;
+}
+
+.hero-description {
+margin: 8px auto 12px;
+}
+
+.character-section {
+margin: 10px 0;
+}
+
+.character-option {
+padding: 7px;
+}
+
+.character-avatar {
+width: 36px;
+height: 36px;
+font-size: 25px;
+}
+
+.start-footer {
+margin-top: 10px;
+}
+
+.game-hud {
+padding: 8px 12px;
+}
+
+.progress-container {
+padding-bottom: 8px;
+}
+
+.mobile-controls {
+padding-top: 8px;
+}
+
+.control-button {
+width: 45px;
+height: 45px;
+}
+}
+
+/* تقليل الحركة لمن يفضّل ذلك */
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+*,
+*::before,
+*::after {
+scroll-behavior: auto !important;
+animation-duration: 0.01ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: 0.01ms !important;
+}
    }
