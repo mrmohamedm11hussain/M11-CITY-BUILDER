@@ -29,3 +29,8 @@ ul{padding:0 18px;margin:0;line-height:1.9;font-size:15px}li.k{color:var(--amb)}
 #whisper.on{opacity:1}
 .stats{color:var(--mut);font-size:13px;line-height:1.9;border-top:1px solid #2a2530;padding-top:10px;margin-top:16px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.mini{padding:8px 12px;font-size:.85em}
+#log{display:flex;flex-direction:column;gap:12px;margin:14px 0;min-height:60px}
+.qa .q{opacity:.65;margin:0 0 4px}
+.qa .a{margin:0;padding-right:12px;border-right:2px solid currentColor}
