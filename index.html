@@ -2,321 +2,424 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#10152b">
-  <meta name="description" content="YOUR OLD VERSION — مغامرة ألغاز ومنصات حيث يصبح ماضيك مفتاح مستقبلك.">
-  <title>YOUR OLD VERSION | مغامرة الأشباح</title>
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <meta name="theme-color" content="#10101c">
+  <meta name="description" content="YOUR OLD VERSION — مغامرة منصات مليئة بالألغاز والأشباح.">
+
+  <title>YOUR OLD VERSION | M11 Games</title>
+
   <link rel="stylesheet" href="style.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
-  <main class="game-shell">
 
+  <div class="game-shell">
+
+    <!-- خلفية اللعبة -->
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <!-- رأس الصفحة -->
     <header class="topbar">
       <a class="brand" href="#" aria-label="YOUR OLD VERSION">
-        <span class="brand-icon">◈</span>
+        <span class="brand-icon">👻</span>
         <span class="brand-text">
           <strong>YOUR OLD VERSION</strong>
-          <small>الماضي هو مفتاح المستقبل</small>
+          <small>AN M11 ORIGINAL GAME</small>
         </span>
       </a>
 
-      <div class="top-actions">
-        <button id="soundToggle" class="icon-btn" type="button" aria-label="الصوت">
-          ♪
+      <div class="topbar-actions">
+        <button id="soundToggle"
+                class="icon-button"
+                type="button"
+                aria-label="تبديل الصوت"
+                title="الصوت">
+          🔊
         </button>
-        <button id="fullscreenBtn" class="icon-btn" type="button" aria-label="ملء الشاشة">
+
+        <button id="fullscreenBtn"
+                class="icon-button"
+                type="button"
+                aria-label="ملء الشاشة"
+                title="ملء الشاشة">
           ⛶
         </button>
       </div>
     </header>
 
-    <section class="game-layout">
+    <!-- واجهة اللعبة -->
+    <main class="main-content">
 
-      <aside class="side-panel">
-        <div class="panel-heading">
-          <span class="status-dot"></span>
-          <span>مركز المغامرة</span>
+      <!-- شاشة البداية -->
+      <section id="o1" class="overlay show" aria-label="شاشة البداية">
+        <div class="screen-card start-card">
+
+          <div class="hero-art">
+            <div class="hero-orb orb-one"></div>
+            <div class="hero-orb orb-two"></div>
+
+            <div class="hero-character hero-character-left">🧑🏻‍🚀</div>
+            <div class="hero-ghost">👻</div>
+            <div class="hero-character hero-character-right">🧙🏻‍♀️</div>
+
+            <span class="hero-star star-one">✦</span>
+            <span class="hero-star star-two">✧</span>
+            <span class="hero-star star-three">✦</span>
+          </div>
+
+          <div class="game-label">
+            <span class="status-dot"></span>
+            مغامرتك الجديدة تبدأ هنا
+          </div>
+
+          <h1>YOUR OLD <span>VERSION</span></h1>
+
+          <p class="hero-description">
+            كل خطوة بتسيب أثرًا... وكل شبح عنده سر.
+            هل تقدر تستخدم ماضيك عشان توصل للمستقبل؟
+          </p>
+
+          <!-- اختيار الشخصية -->
+          <div class="character-section">
+            <h2>اختار شخصيتك</h2>
+
+            <div class="character-options">
+
+              <button class="character-option selected"
+                      type="button"
+                      data-character="adam"
+                      aria-pressed="true">
+                <span class="character-avatar">🧑🏻‍🚀</span>
+                <span class="character-name">آدم</span>
+                <span class="character-description">المستكشف الشجاع</span>
+              </button>
+
+              <button class="character-option"
+                      type="button"
+                      data-character="layan"
+                      aria-pressed="false">
+                <span class="character-avatar">🧙🏻‍♀️</span>
+                <span class="character-name">ليان</span>
+                <span class="character-description">حارسة الأسرار</span>
+              </button>
+
+            </div>
+          </div>
+
+          <button id="go" class="primary-button" type="button">
+            <span>ابدأ المغامرة</span>
+            <span class="button-arrow">←</span>
+          </button>
+
+          <div class="start-footer">
+            <span>🎮 تحكم سهل</span>
+            <span>👻 ألغاز ذكية</span>
+            <span>💎 أسرار مخفية</span>
+          </div>
+
+        </div>
+      </section>
+
+
+      <!-- منطقة اللعب -->
+      <section id="gameArea" class="game-area" aria-label="منطقة اللعب">
+
+        <!-- شريط المعلومات -->
+        <div class="game-hud">
+
+          <div class="hud-item">
+            <span class="hud-icon">🌍</span>
+            <div>
+              <small>العالم</small>
+              <strong id="wn">الغابة المسحورة</strong>
+            </div>
+          </div>
+
+          <div class="hud-item">
+            <span class="hud-icon">🎯</span>
+            <div>
+              <small>المرحلة</small>
+              <strong id="lv">1</strong>
+            </div>
+          </div>
+
+          <div class="hud-item">
+            <span class="hud-icon">⭐</span>
+            <div>
+              <small>النقاط</small>
+              <strong id="lp">0</strong>
+            </div>
+          </div>
+
+          <div class="hud-item health-item">
+            <span class="hud-icon">❤️</span>
+            <div>
+              <small>الحالة</small>
+              <strong id="healthValue">3 فرص</strong>
+            </div>
+          </div>
+
         </div>
 
-        <div class="world-card">
-          <div class="world-art">🌲</div>
-          <div class="world-info">
-            <span class="eyebrow">العالم الحالي</span>
-            <strong id="wn">الغابة المسحورة</strong>
-          </div>
-        </div>
-
-        <div class="stats-grid">
-          <div class="stat-card">
-            <span class="stat-icon">🚪</span>
-            <span class="stat-label">المرحلة</span>
-            <strong id="lv">1 / 10</strong>
-          </div>
-
-          <div class="stat-card">
-            <span class="stat-icon">💎</span>
-            <span class="stat-label">الجواهر</span>
-            <strong id="lp">0</strong>
-          </div>
-        </div>
-
-        <div class="progress-card">
-          <div class="progress-heading">
-            <span>تقدم المغامرة</span>
-            <span id="progressText">0%</span>
-          </div>
+        <!-- تقدم المرحلة -->
+        <div class="progress-container">
           <div class="progress-track">
             <div id="fill" class="progress-fill"></div>
           </div>
         </div>
 
-        <div class="hint-card">
-          <span class="hint-icon">✦</span>
-          <div>
-            <strong>تلميحة المغامر</strong>
-            <p id="hint">استكشف المكان وفكّر قبل أن تتحرك.</p>
-          </div>
-        </div>
+        <!-- لوحة اللعب -->
+        <div class="canvas-frame">
 
-        <div class="controls-guide">
-          <h3>🎮 طريقة اللعب</h3>
-          <div class="guide-row">
-            <span>الحركة</span>
-            <kbd>←</kbd><kbd>→</kbd>
-          </div>
-          <div class="guide-row">
-            <span>القفز</span>
-            <kbd>Space</kbd>
-          </div>
-          <div class="guide-row">
-            <span>إعادة المرحلة</span>
-            <kbd>R</kbd>
-          </div>
-          <p class="guide-note">على الهاتف استخدم أزرار التحكم أسفل اللعبة.</p>
-        </div>
-
-        <div class="creator-credit">
-          <span>صُنع بشغف بواسطة</span>
-          <strong>M11 / Mr. Mohamed Hussain</strong>
-        </div>
-      </aside>
-
-      <section class="play-area">
-        <div class="level-toolbar">
-          <div class="level-title">
+          <div class="canvas-top-decoration">
             <span class="live-indicator"></span>
-            <div>
-              <strong>ساحة المغامرة</strong>
-              <small>استعد لاكتشاف المجهول</small>
+            <span>LIVE ADVENTURE</span>
+            <span class="canvas-world-name">M11 WORLDS</span>
+          </div>
+
+          <canvas id="c"
+                  width="800"
+                  height="440"
+                  tabindex="0"
+                  aria-label="لعبة منصات تفاعلية">
+            متصفحك لا يدعم تشغيل الألعاب باستخدام Canvas.
+          </canvas>
+
+          <div id="hint" class="game-hint" aria-live="polite"></div>
+
+          <!-- شاشة الخسارة -->
+          <div id="gameOver" class="overlay result-overlay">
+            <div class="screen-card result-card">
+
+              <div class="result-icon">💔</div>
+
+              <span class="result-label">نهاية المحاولة</span>
+
+              <h2>مش نهاية المغامرة!</h2>
+
+              <p>اتعلم من محاولتك وجرب مرة تانية.</p>
+
+              <div class="result-stats">
+                <div>
+                  <small>نقاطك</small>
+                  <strong id="finalScore">0</strong>
+                </div>
+
+                <div>
+                  <small>المرحلة</small>
+                  <strong id="finalLevel">1</strong>
+                </div>
+              </div>
+
+              <button id="gameOverRestart" class="primary-button" type="button">
+                حاول مرة تانية ↻
+              </button>
+
             </div>
           </div>
 
-          <div class="toolbar-actions">
-            <button id="rs" class="small-action" type="button" title="إعادة المرحلة">
-              ↻ <span>إعادة</span>
-            </button>
-            <button id="nx" class="small-action" type="button" title="المرحلة التالية">
-              التالي ←
-            </button>
+          <!-- شاشة الفوز -->
+          <div id="o2" class="overlay result-overlay">
+            <div class="screen-card result-card victory-card">
+
+              <div class="result-icon victory-icon">🏆</div>
+
+              <span class="result-label">إنجاز جديد</span>
+
+              <h2 id="t2">أحسنت! 🎉</h2>
+
+              <p id="p2">أنهيت المرحلة بنجاح.</p>
+
+              <div class="result-stats">
+                <div>
+                  <small>النقاط</small>
+                  <strong id="victoryScore">0</strong>
+                </div>
+
+                <div>
+                  <small>الجواهر</small>
+                  <strong id="victoryGems">💎</strong>
+                </div>
+              </div>
+
+              <button id="n2" class="primary-button" type="button">
+                المرحلة التالية ←
+              </button>
+
+              <button id="winRestart" class="secondary-button" type="button">
+                إعادة المرحلة ↻
+              </button>
+
+            </div>
           </div>
+
         </div>
 
-        <div class="canvas-frame">
-          <div class="canvas-decoration decoration-one"></div>
-          <div class="canvas-decoration decoration-two"></div>
+        <!-- أزرار التحكم باللمس -->
+        <div class="mobile-controls" aria-label="أزرار التحكم">
 
-          <canvas id="c" width="960" height="540" aria-label="ساحة لعبة YOUR OLD VERSION">
-            متصفحك لا يدعم تشغيل اللعبة.
-          </canvas>
-
-          <div class="canvas-bottom-bar">
-            <span><i class="mini-dot"></i> عالم حيّ ومتغير</span>
-            <span>YOUR OLD VERSION <b>◆</b></span>
-          </div>
-        </div>
-
-        <div class="mobile-controls" aria-label="أزرار التحكم باللمس">
           <div class="movement-controls">
-            <button id="left" class="control-btn direction-btn" type="button" aria-label="يسار">
-              ◀
-            </button>
-            <button id="right" class="control-btn direction-btn" type="button" aria-label="يمين">
+            <button id="right"
+                    class="control-button direction-button"
+                    type="button"
+                    aria-label="يمين">
               ▶
             </button>
+
+            <button id="left"
+                    class="control-button direction-button"
+                    type="button"
+                    aria-label="يسار">
+              ◀
+            </button>
           </div>
 
-          <button id="jump" class="control-btn jump-btn" type="button" aria-label="قفز">
-            <span>↑</span>
-            <small>قفز</small>
-          </button>
+          <div class="action-controls">
+            <button id="jump"
+                    class="control-button jump-button"
+                    type="button"
+                    aria-label="قفز">
+              <span>⬆</span>
+              <small>قفز</small>
+            </button>
+          </div>
+
         </div>
 
-        <div class="bottom-tips">
-          <div class="tip-item">
-            <span class="tip-symbol">👻</span>
-            <span><strong>نسختك الشبحية</strong><small>استفد من حركاتك السابقة</small></span>
-          </div>
-          <div class="tip-item">
-            <span class="tip-symbol">🔮</span>
-            <span><strong>اكتشف الأسرار</strong><small>كل زاوية قد تخفي مفاجأة</small></span>
-          </div>
-          <div class="tip-item">
-            <span class="tip-symbol">🏆</span>
-            <span><strong>تجاوز الفخاخ</strong><small>الوصول للباب هو هدفك</small></span>
-          </div>
+        <div class="control-help">
+          <span>⌨️ الأسهم للحركة</span>
+          <span>␣ مسافة للقفز</span>
+          <span>👻 استخدم الأشباح لحل الألغاز</span>
         </div>
+
       </section>
 
-    </section>
 
-    <!-- شاشة البداية -->
-    <section id="o1" class="overlay show" role="dialog" aria-modal="true" aria-labelledby="startTitle">
-      <div class="dialog-card start-dialog">
-        <div class="dialog-decoration"></div>
+      <!-- معلومات اللعبة -->
+      <section class="feature-strip">
 
-        <div class="game-emblem">
-          <span class="emblem-orbit orbit-one"></span>
-          <span class="emblem-orbit orbit-two"></span>
-          <span class="emblem-symbol">👻</span>
-        </div>
-
-        <span class="eyebrow">رحلة خارج حدود الزمن</span>
-        <h1 id="startTitle">YOUR OLD<br><span>VERSION</span></h1>
-
-        <p class="dialog-description">
-          كل خطوة تترك أثرًا، وكل أثر قد ينقذك لاحقًا.
-          استخدم نسخك الشبحية لحل الألغاز وتجاوز الفخاخ.
-        </p>
-
-        <div class="character-section">
-          <h2>اختر مغامرك</h2>
-
-          <div id="chs" class="character-grid">
-            <button class="character-option selected" type="button" data-character="adam" aria-pressed="true">
-              <span class="character-avatar adam-avatar">🧑🏻‍🚀</span>
-              <strong>آدم</strong>
-              <small>مغامر لا يستسلم</small>
-              <span class="character-check">✓</span>
-            </button>
-
-            <button class="character-option" type="button" data-character="layan" aria-pressed="false">
-              <span class="character-avatar layan-avatar">👩🏻‍🚀</span>
-              <strong>ليان</strong>
-              <small>عقل يكتشف الأسرار</small>
-              <span class="character-check">✓</span>
-            </button>
+        <article class="feature-card">
+          <span class="feature-icon">👻</span>
+          <div>
+            <h3>أشباحك تساعدك</h3>
+            <p>استفد من حركاتك السابقة لتجاوز الألغاز.</p>
           </div>
-        </div>
+        </article>
 
-        <button id="go" class="primary-btn" type="button">
-          <span>ابدأ المغامرة</span>
-          <span class="button-arrow">←</span>
-        </button>
+        <article class="feature-card">
+          <span class="feature-icon">💎</span>
+          <div>
+            <h3>اكتشف الأسرار</h3>
+            <p>اجمع الجواهر وابحث عن الطرق المخفية.</p>
+          </div>
+        </article>
 
-        <div class="start-footer">
-          <span>٣ عوالم</span><i></i>
-          <span>ألغاز وفخاخ</span><i></i>
-          <span>أشباح من الماضي</span>
-        </div>
-      </div>
-    </section>
+        <article class="feature-card">
+          <span class="feature-icon">🏆</span>
+          <div>
+            <h3>تقدم باستمرار</h3>
+            <p>أنهِ المراحل وافتح تحديات جديدة.</p>
+          </div>
+        </article>
 
-    <!-- شاشة الفوز -->
-    <section id="o2" class="overlay" role="dialog" aria-modal="true" aria-labelledby="t2">
-      <div class="dialog-card result-dialog">
-        <div class="result-icon">🏆</div>
-        <span class="eyebrow">إنجاز جديد!</span>
-        <h2 id="t2">أحسنت أيها المغامر!</h2>
-        <p id="p2">لقد نجحت في تجاوز التحدي.</p>
+      </section>
 
-        <div class="result-divider"></div>
+    </main>
 
-        <div class="result-actions">
-          <button id="winRestart" class="secondary-btn" type="button">↻ إعادة المرحلة</button>
-          <button id="n2" class="primary-btn" type="button">المرحلة التالية ←</button>
-        </div>
-      </div>
-    </section>
+    <!-- تذييل -->
+    <footer class="site-footer">
+      <span>YOUR OLD VERSION</span>
+      <span>CREATED & DEVELOPED BY <strong>M11</strong></span>
+      <span>© 2026</span>
+    </footer>
 
-  </main>
+  </div>
 
+  <!-- ملفات المراحل ومنطق اللعبة -->
   <script src="levels.js"></script>
   <script src="game.js"></script>
 
+  <!-- وظائف الواجهة -->
   <script>
     (() => {
-      const fullscreenBtn = document.getElementById("fullscreenBtn");
-      const soundToggle = document.getElementById("soundToggle");
-      const gameShell = document.querySelector(".game-shell");
+      "use strict";
 
-      fullscreenBtn?.addEventListener("click", async () => {
+      const $ = (id) => document.getElementById(id);
+
+      // اختيار الشخصية
+      document.querySelectorAll("[data-character]").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("[data-character]").forEach((item) => {
+            item.classList.remove("selected");
+            item.setAttribute("aria-pressed", "false");
+          });
+
+          button.classList.add("selected");
+          button.setAttribute("aria-pressed", "true");
+
+          try {
+            localStorage.setItem(
+              "m11_selected_character",
+              button.dataset.character
+            );
+          } catch (_) {}
+        });
+      });
+
+      // استعادة الشخصية المختارة سابقًا
+      try {
+        const savedCharacter = localStorage.getItem(
+          "m11_selected_character"
+        );
+
+        if (savedCharacter) {
+          const savedButton = document.querySelector(
+            `[data-character="${savedCharacter}"]`
+          );
+
+          if (savedButton) savedButton.click();
+        }
+      } catch (_) {}
+
+      // ملء الشاشة
+      $("fullscreenBtn")?.addEventListener("click", async () => {
         try {
           if (!document.fullscreenElement) {
-            await (gameShell.requestFullscreen?.() || document.documentElement.requestFullscreen?.());
+            await document.documentElement.requestFullscreen();
           } else {
             await document.exitFullscreen();
           }
-        } catch (error) {
-          console.log("Fullscreen is not available in this browser.");
+        } catch (_) {
+          // قد يمنع المتصفح ملء الشاشة في بعض الحالات.
         }
       });
 
-      document.addEventListener("fullscreenchange", () => {
-        fullscreenBtn.textContent = document.fullscreenElement ? "⤢" : "⛶";
-      });
-
-      soundToggle?.addEventListener("click", () => {
-        const muted = soundToggle.dataset.muted !== "true";
-        soundToggle.dataset.muted = String(muted);
-        soundToggle.classList.toggle("muted", muted);
-        soundToggle.textContent = muted ? "♪̸" : "♪";
-        soundToggle.setAttribute("aria-label", muted ? "الصوت مكتوم" : "الصوت");
-        window.gameMuted = muted;
-      });
-
-      const progressText = document.getElementById("progressText");
-      const progressFill = document.getElementById("fill");
-
-      function updateProgress() {
-        if (!progressFill || !progressText) return;
-        const raw = parseFloat(progressFill.style.width);
-        if (Number.isFinite(raw)) {
-          progressText.textContent = Math.round(Math.max(0, Math.min(100, raw))) + "%";
+      // إعادة تشغيل اللعبة عند توفر دالة إعادة التشغيل
+      $("gameOverRestart")?.addEventListener("click", () => {
+        if (typeof window.restartLevel === "function") {
+          window.restartLevel();
+        } else {
+          $("go")?.click();
         }
-      }
+      });
 
-      const observer = new MutationObserver(updateProgress);
-      if (progressFill) {
-        observer.observe(progressFill, {
-          attributes: true,
-          attributeFilter: ["style"]
-        });
-      }
-      updateProgress();
-
-      // اختيار الشخصية مع إبراز الشخصية المختارة.
-      document.querySelectorAll("[data-character]").forEach(button => {
-        button.addEventListener("click", () => {
-          document.querySelectorAll("[data-character]").forEach(item => {
-            const selected = item === button;
-            item.classList.toggle("selected", selected);
-            item.setAttribute("aria-pressed", String(selected));
-          });
+      // منع القائمة الافتراضية عند الضغط المطول على أزرار اللمس
+      document.querySelectorAll(".control-button").forEach((button) => {
+        button.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
         });
       });
 
-      // ملاءمة عرض اللعبة لشاشة الهاتف عند تدوير الجهاز.
-      function updateOrientationHint() {
-        document.documentElement.style.setProperty(
-          "--screen-height",
-          window.innerHeight + "px"
-        );
-      }
-
-      window.addEventListener("resize", updateOrientationHint);
-      updateOrientationHint();
     })();
   </script>
+
 </body>
   </html>
