@@ -2,7 +2,8 @@
 "use strict";
 
 /* =========================================
-   M11 CITY BUILDER — ADVENTURE ENGINE
+   YOUR OLD VERSION — M11 DEVELOPMENT
+   GAME ENGINE
    ========================================= */
 
 const $ = id => document.getElementById(id);
@@ -30,7 +31,9 @@ const COLORS = {
 
 const getLevels = () =>
   Array.isArray(window.LEVELS) ? window.LEVELS :
-  (typeof LEVELS !== "undefined" && Array.isArray(LEVELS) ? LEVELS : []);
+  (typeof LEVELS !== "undefined" && Array.isArray(LEVELS)
+    ? LEVELS
+    : []);
 
 const levels = getLevels();
 
@@ -85,7 +88,10 @@ function loadSave() {
     state.score = Math.max(0, Number(data.score) || 0);
     state.unlockedLevel = Math.max(
       0,
-      Math.min(Number(data.unlockedLevel) || 0, Math.max(0, levels.length - 1))
+      Math.min(
+        Number(data.unlockedLevel) || 0,
+        Math.max(0, levels.length - 1)
+      )
     );
 
     state.levelIndex = state.unlockedLevel;
@@ -133,9 +139,8 @@ function normaliseMap(level) {
       ? level.grid
       : [];
 
-  const rows = source.map(row => Array.isArray(row)
-    ? row.map(String)
-    : String(row).split("")
+  const rows = source.map(row =>
+    Array.isArray(row) ? row.map(String) : String(row).split("")
   );
 
   const cols = Math.max(20, ...rows.map(row => row.length));
@@ -196,10 +201,6 @@ function createPlayer(x, y) {
   };
 }
 
-/*
-  نحفظ نقطة البداية مرة واحدة عند تحميل المرحلة.
-  لا نعتمد على البحث عن S بعد ذلك لأن علامة S تُزال من الخريطة.
-*/
 function findStart() {
   for (let y = 0; y < state.rows; y++) {
     for (let x = 0; x < state.cols; x++) {
@@ -254,7 +255,6 @@ function createLevelObjects() {
     }
   }
 
-  // جواهر إضافية موزعة على المسار.
   for (let x = 2; x < state.cols - 2; x++) {
     for (let y = 1; y < state.rows - 1; y++) {
       if (
@@ -272,7 +272,6 @@ function createLevelObjects() {
     }
   }
 
-  // قدرات مؤقتة.
   for (let x = 4; x < state.cols - 3; x += 7) {
     for (let y = 1; y < state.rows - 1; y++) {
       if (
@@ -282,7 +281,9 @@ function createLevelObjects() {
         state.powerups.push({
           x: x * TILE + TILE / 2,
           y: y * TILE - 20,
-          type: ((x + state.levelIndex) % 2 === 0) ? "shield" : "speed",
+          type: ((x + state.levelIndex) % 2 === 0)
+            ? "shield"
+            : "speed",
           taken: false,
           phase: Math.random() * Math.PI * 2
         });
@@ -320,7 +321,6 @@ function loadLevel(index, keepLives = true) {
 
   if (!keepLives) state.lives = 3;
 
-  // نحفظ مكان الظهور قبل إزالة علامة S.
   state.spawn = findStart();
   state.player = createPlayer(state.spawn.x, state.spawn.y);
 
@@ -541,7 +541,6 @@ function updateGhosts() {
   for (const ghost of state.ghosts) {
     if (ghost.index < ghost.frames.length) {
       const frame = ghost.frames[ghost.index++];
-
       ghost.x = frame.x;
       ghost.y = frame.y;
     } else {
@@ -619,7 +618,6 @@ function resetAfterHit() {
     return;
   }
 
-  // نستخدم نقطة البداية المحفوظة، ولا نبحث عن S مرة أخرى.
   p.x = state.spawn.x;
   p.y = state.spawn.y;
   p.vx = 0;
@@ -632,9 +630,13 @@ function resetAfterHit() {
   p.speedBoost = 0;
 
   state.recording = [];
+
   state.cameraX = Math.max(
     0,
-    Math.min(p.x - W * 0.38, state.cols * TILE - W)
+    Math.min(
+      p.x - W * 0.38,
+      Math.max(0, state.cols * TILE - W)
+    )
   );
 
   updateHUD();
@@ -686,7 +688,6 @@ function checkPlates() {
 
   state.plates = occupied;
 
-  // كل لوحة تتحكم في الباب الذي يحمل الحرف المقابل.
   state.doorsOpen.a = occupied["1"];
   state.doorsOpen.b = occupied["2"];
   state.doorsOpen.c = occupied["3"];
@@ -949,11 +950,23 @@ function update() {
     }
   }
 
-  // تحريك الكاميرا مع اللاعب.
-  state.cameraX = Math.max(
+  /*
+    CAMERA FOLLOW:
+    تحافظ الكاميرا على اللاعب في موضع مريح
+    وتمنع خروجها عن حدود العالم.
+  */
+  const worldWidth = state.cols * TILE;
+  const maxCameraX = Math.max(0, worldWidth - W);
+  const targetCameraX = Math.max(
     0,
-    Math.min(p.x - W * 0.38, Math.max(0, state.cols * TILE - W))
+    Math.min(p.x - W * 0.38, maxCameraX)
   );
+
+  state.cameraX += (targetCameraX - state.cameraX) * 0.16;
+
+  if (Math.abs(targetCameraX - state.cameraX) < 0.1) {
+    state.cameraX = targetCameraX;
+  }
 
   for (const particle of state.particles) {
     particle.x += particle.vx;
@@ -1023,7 +1036,6 @@ function drawBackground() {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, W, H);
 
-  // نجوم ثابتة.
   for (let i = 0; i < 50; i++) {
     const sx = (i * 137 + 43) % W;
     const sy = (i * 71 + 19) % Math.max(1, H * 0.75);
@@ -1035,7 +1047,6 @@ function drawBackground() {
 
   ctx.globalAlpha = 1;
 
-  // جبال متعددة الطبقات.
   for (let layer = 0; layer < 3; layer++) {
     ctx.beginPath();
     ctx.moveTo(0, H);
@@ -1069,11 +1080,9 @@ function drawBackground() {
    ========================================= */
 
 function drawTile(x, y, tile) {
-  // الإصلاح الأساسي: إزاحة كل بلاطة بمقدار حركة الكاميرا.
   const px = x * TILE - state.cameraX;
   const py = y * TILE;
 
-  // لا نرسم البلاطات خارج الشاشة.
   if (px + TILE < -2 || px > W + 2) return;
 
   if (tile === "#") {
@@ -1309,7 +1318,7 @@ function drawPlayer(player, ghost = false) {
     );
     ctx.stroke();
 
-    ctx.globalAlpha = ghost ? 0.42 : 1;
+    ctx.globalAlpha = 1;
   }
 
   const bodyGradient = ctx.createLinearGradient(
@@ -1323,14 +1332,12 @@ function drawPlayer(player, ghost = false) {
   roundedRect(x, y + 8, player.w, player.h - 8, 9);
   ctx.fill();
 
-  // الرأس.
   ctx.fillStyle = ghost ? "#e0faff" : "#ffdfbd";
 
   ctx.beginPath();
   ctx.arc(x + player.w / 2, y + 8, 11, 0, Math.PI * 2);
   ctx.fill();
 
-  // غطاء الرأس.
   ctx.fillStyle = ghost ? "#67e8f9" :
     (state.character === "layan" ? "#ec4899" : "#4f46e5");
 
@@ -1338,7 +1345,6 @@ function drawPlayer(player, ghost = false) {
   ctx.arc(x + player.w / 2, y + 5, 11, Math.PI, Math.PI * 2);
   ctx.fill();
 
-  // العين.
   ctx.fillStyle = "#111827";
 
   const eyeX = player.facing >= 0 ? x + 18 : x + 9;
@@ -1347,11 +1353,9 @@ function drawPlayer(player, ghost = false) {
   ctx.arc(eyeX, y + 9, 1.5, 0, Math.PI * 2);
   ctx.fill();
 
-  // تفاصيل اللباس.
   ctx.fillStyle = ghost ? "#e0faff" : COLORS.cyan;
   ctx.fillRect(x + 5, y + 20, player.w - 10, 3);
 
-  // القدمين.
   ctx.fillStyle = ghost ? "#bae6fd" : "#27234a";
 
   const step = Math.sin(player.anim || 0) * 3;
@@ -1444,13 +1448,15 @@ function startGame() {
     return;
   }
 
-  const savedCharacter = localStorage.getItem(CHARACTER_KEY);
+  let savedCharacter = "adam";
+
+  try {
+    savedCharacter = localStorage.getItem(CHARACTER_KEY) || "adam";
+  } catch (_) {}
+
   const selected = document.querySelector("[data-character].selected");
 
-  state.character =
-    selected?.dataset.character ||
-    savedCharacter ||
-    "adam";
+  state.character = selected?.dataset.character || savedCharacter;
 
   try {
     localStorage.setItem(CHARACTER_KEY, state.character);
