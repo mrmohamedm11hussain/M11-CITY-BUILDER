@@ -1,32 +1,212 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>نسختك القديمة: الغابة المسحورة | M11 Development</title>
-<meta name="description" content="لعبة ألغاز زمنية من تصميم M11 Development">
-<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#10172c">
+  <meta name="description" content="YOUR OLD VERSION — لعبة ألغاز ومغامرات من تطوير M11.">
+  <title>YOUR OLD VERSION | M11</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<div id="app">
-  <div id="hud"><span id="wn"></span><span>المستوى <b id="lv">1</b></span><span>الجولة <b id="lp">1</b></span><div id="bar"><i id="fill"></i></div></div>
-  <div id="hint"></div>
-  <canvas id="c" width="800" height="440"></canvas>
-  <div id="pad"><div><button data-k="l">◀</button><button data-k="r">▶</button></div><button data-k="j">⤒ نطّة</button></div>
-  <div id="ctl"><button id="rs">↻ إعادة المستوى</button><button id="nx" class="main">▶ جولة جديدة</button></div>
-  <div id="brand">من تصميم <span>M11 Development</span> · المدير: <span>Mr. Mohamed Hussain</span></div>
-</div>
-<div class="ov" id="o1">
-  <h1>نسختك القديمة</h1>
-  <p>الغابة المسحورة: كل جولة بتتسجّل، ونسختك القديمة بتعيد حركتها وتفتحلك الأبواب. وصّل للبوابة المضيئة.</p>
-  <p>الحركة: الأسهم أو A/D · النطّ: W أو مسافة · على الموبايل استخدم الأزرار</p>
-  <div class="chars" id="chs"></div>
-  <button class="main" id="go">ادخل الغابة</button>
-  <div class="co">من تصميم <span>M11 Development</span><br>المدير: <span>Mr. Mohamed Hussain</span></div>
-</div>
-<div class="ov off" id="o2"><h1 id="t2">عدّيت!</h1><p id="p2"></p><button class="main" id="n2">المستوى اللي بعده</button></div>
-<script src="levels.js"></script>
-<script src="game.js"></script>
+  <main class="app">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="YOUR OLD VERSION">
+        <span class="brand-icon">◈</span>
+        <span class="brand-text">
+          <strong>YOUR OLD VERSION</strong>
+          <small>EVERY PAST VERSION LEAVES A TRACE</small>
+        </span>
+      </a>
+
+      <div class="developer-tag">M11 <span>STUDIO</span></div>
+    </header>
+
+    <section class="game-panel">
+      <div class="game-heading">
+        <div>
+          <span class="eyebrow">YOUR JOURNEY BEGINS</span>
+          <h1>واجه نسختك القديمة</h1>
+          <p>كل جولة تترك نسخة منك تساعدك في الجولة التالية.</p>
+        </div>
+
+        <div class="level-badge">
+          <span>المستوى</span>
+          <strong id="lv">1</strong>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <div class="world-label">
+          <span class="status-dot"></span>
+          <span id="wn">الغابة المسحورة</span>
+        </div>
+
+        <div class="level-progress">
+          <span id="lp">1 / 30</span>
+          <div class="progress-track">
+            <div id="fill" class="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="canvas-shell">
+        <canvas id="c" width="800" height="440"
+          aria-label="ساحة اللعب"></canvas>
+
+        <div class="game-watermark">YOUR OLD VERSION</div>
+      </div>
+
+      <div class="hint-box">
+        <span class="hint-icon">✦</span>
+        <p id="hint">استعد للمغامرة!</p>
+      </div>
+
+      <div class="game-actions">
+        <button id="rs" class="action-button secondary" type="button">
+          ↻ إعادة المحاولة
+        </button>
+
+        <button id="nx" class="action-button secondary" type="button">
+          المستوى التالي ←
+        </button>
+      </div>
+
+      <div class="touch-controls" aria-label="أزرار التحكم">
+        <div class="movement-controls">
+          <button id="left" class="control-button" type="button"
+            aria-label="يسار">◀</button>
+          <button id="right" class="control-button" type="button"
+            aria-label="يمين">▶</button>
+        </div>
+
+        <button id="jump" class="control-button jump-button"
+          type="button" aria-label="قفز">قفز ↑</button>
+      </div>
+    </section>
+
+    <section class="info-grid">
+      <article class="info-card">
+        <span class="info-icon">⟳</span>
+        <h2>الزمن يعيد نفسه</h2>
+        <p>تحركاتك السابقة تتحول إلى نسخ تساعدك في حل الألغاز.</p>
+      </article>
+
+      <article class="info-card">
+        <span class="info-icon">◇</span>
+        <h2>فكّر قبل أن تتحرك</h2>
+        <p>استخدم الألواح لفتح الأبواب والوصول إلى بوابة النهاية.</p>
+      </article>
+
+      <article class="info-card">
+        <span class="info-icon">✧</span>
+        <h2>ثلاثة عوالم</h2>
+        <p>استكشف الغابة المسحورة والآثار القديمة ومملكة الكريستال.</p>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <span>YOUR OLD VERSION</span>
+      <span>Designed & Developed by M11 / Mr. Mohamed Hussain</span>
+      <span>© 2026 M11 Studio</span>
+    </footer>
+  </main>
+
+  <!-- شاشة البداية -->
+  <section id="o1" class="overlay show">
+    <div class="dialog start-dialog">
+      <div class="dialog-symbol">◈</div>
+      <span class="eyebrow">A TIME-LOOP ADVENTURE</span>
+
+      <h2>YOUR OLD VERSION</h2>
+
+      <p class="dialog-description">
+        أنت مش لوحدك في الرحلة.<br>
+        نسختك القديمة ممكن تكون مفتاح نجاتك.
+      </p>
+
+      <div class="character-heading">اختر شخصيتك</div>
+
+      <div id="chs" class="character-select">
+        <button type="button" class="character-option selected"
+          data-character="adam" aria-pressed="true">
+          <span class="character-avatar adam-avatar">A</span>
+          <strong>آدم</strong>
+          <small>المغامر</small>
+        </button>
+
+        <button type="button" class="character-option"
+          data-character="layan" aria-pressed="false">
+          <span class="character-avatar layan-avatar">L</span>
+          <strong>ليان</strong>
+          <small>المستكشفة</small>
+        </button>
+      </div>
+
+      <button id="go" class="start-button" type="button">
+        ابدأ المغامرة <span>←</span>
+      </button>
+
+      <div class="dialog-credit">AN M11 ORIGINAL GAME</div>
+    </div>
+  </section>
+
+  <!-- شاشة الفوز -->
+  <section id="o2" class="overlay">
+    <div class="dialog win-dialog">
+      <div class="win-symbol">✦</div>
+      <span class="eyebrow">LEVEL COMPLETED</span>
+
+      <h2 id="t2">نجحت في المستوى!</h2>
+      <p id="p2">أحسنت! أكمل رحلتك.</p>
+
+      <button id="n2" class="start-button" type="button">
+        المستوى التالي
+      </button>
+
+      <button id="winRestart" class="text-button" type="button">
+        إعادة المستوى
+      </button>
+    </div>
+  </section>
+
+  <script src="levels.js"></script>
+  <script src="game.js"></script>
+
+  <script>
+    (() => {
+      const characterContainer = document.getElementById("chs");
+
+      characterContainer.addEventListener("click", event => {
+        const button = event.target.closest("[data-character]");
+        if (!button) return;
+
+        const buttons = characterContainer.querySelectorAll(
+          "[data-character]"
+        );
+
+        buttons.forEach(item => {
+          const selected = item === button;
+          item.classList.toggle("selected", selected);
+          item.setAttribute("aria-pressed", String(selected));
+        });
+
+        const index = button.dataset.character === "layan" ? 1 : 0;
+
+        if (window.YOUR_OLD_VERSION) {
+          window.YOUR_OLD_VERSION.chooseCharacter(index);
+        }
+      });
+
+      document.getElementById("winRestart").addEventListener("click", () => {
+        document.getElementById("o2").classList.remove("show");
+
+        if (window.YOUR_OLD_VERSION) {
+          window.YOUR_OLD_VERSION.restart();
+        }
+      });
+    })();
+  </script>
 </body>
-</html>
+  </html>
