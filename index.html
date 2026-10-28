@@ -2,210 +2,320 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#10172c">
-  <meta name="description" content="YOUR OLD VERSION — لعبة ألغاز ومغامرات من تطوير M11.">
-  <title>YOUR OLD VERSION | M11</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#10152b">
+  <meta name="description" content="YOUR OLD VERSION — مغامرة ألغاز ومنصات حيث يصبح ماضيك مفتاح مستقبلك.">
+  <title>YOUR OLD VERSION | مغامرة الأشباح</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <main class="app">
+  <main class="game-shell">
+
     <header class="topbar">
       <a class="brand" href="#" aria-label="YOUR OLD VERSION">
         <span class="brand-icon">◈</span>
         <span class="brand-text">
           <strong>YOUR OLD VERSION</strong>
-          <small>EVERY PAST VERSION LEAVES A TRACE</small>
+          <small>الماضي هو مفتاح المستقبل</small>
         </span>
       </a>
 
-      <div class="developer-tag">M11 <span>STUDIO</span></div>
+      <div class="top-actions">
+        <button id="soundToggle" class="icon-btn" type="button" aria-label="الصوت">
+          ♪
+        </button>
+        <button id="fullscreenBtn" class="icon-btn" type="button" aria-label="ملء الشاشة">
+          ⛶
+        </button>
+      </div>
     </header>
 
-    <section class="game-panel">
-      <div class="game-heading">
-        <div>
-          <span class="eyebrow">YOUR JOURNEY BEGINS</span>
-          <h1>واجه نسختك القديمة</h1>
-          <p>كل جولة تترك نسخة منك تساعدك في الجولة التالية.</p>
-        </div>
+    <section class="game-layout">
 
-        <div class="level-badge">
-          <span>المستوى</span>
-          <strong id="lv">1</strong>
-        </div>
-      </div>
-
-      <div class="status-bar">
-        <div class="world-label">
+      <aside class="side-panel">
+        <div class="panel-heading">
           <span class="status-dot"></span>
-          <span id="wn">الغابة المسحورة</span>
+          <span>مركز المغامرة</span>
         </div>
 
-        <div class="level-progress">
-          <span id="lp">1 / 30</span>
+        <div class="world-card">
+          <div class="world-art">🌲</div>
+          <div class="world-info">
+            <span class="eyebrow">العالم الحالي</span>
+            <strong id="wn">الغابة المسحورة</strong>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-icon">🚪</span>
+            <span class="stat-label">المرحلة</span>
+            <strong id="lv">1 / 10</strong>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-icon">💎</span>
+            <span class="stat-label">الجواهر</span>
+            <strong id="lp">0</strong>
+          </div>
+        </div>
+
+        <div class="progress-card">
+          <div class="progress-heading">
+            <span>تقدم المغامرة</span>
+            <span id="progressText">0%</span>
+          </div>
           <div class="progress-track">
             <div id="fill" class="progress-fill"></div>
           </div>
         </div>
-      </div>
 
-      <div class="canvas-shell">
-        <canvas id="c" width="800" height="440"
-          aria-label="ساحة اللعب"></canvas>
-
-        <div class="game-watermark">YOUR OLD VERSION</div>
-      </div>
-
-      <div class="hint-box">
-        <span class="hint-icon">✦</span>
-        <p id="hint">استعد للمغامرة!</p>
-      </div>
-
-      <div class="game-actions">
-        <button id="rs" class="action-button secondary" type="button">
-          ↻ إعادة المحاولة
-        </button>
-
-        <button id="nx" class="action-button secondary" type="button">
-          المستوى التالي ←
-        </button>
-      </div>
-
-      <div class="touch-controls" aria-label="أزرار التحكم">
-        <div class="movement-controls">
-          <button id="left" class="control-button" type="button"
-            aria-label="يسار">◀</button>
-          <button id="right" class="control-button" type="button"
-            aria-label="يمين">▶</button>
+        <div class="hint-card">
+          <span class="hint-icon">✦</span>
+          <div>
+            <strong>تلميحة المغامر</strong>
+            <p id="hint">استكشف المكان وفكّر قبل أن تتحرك.</p>
+          </div>
         </div>
 
-        <button id="jump" class="control-button jump-button"
-          type="button" aria-label="قفز">قفز ↑</button>
+        <div class="controls-guide">
+          <h3>🎮 طريقة اللعب</h3>
+          <div class="guide-row">
+            <span>الحركة</span>
+            <kbd>←</kbd><kbd>→</kbd>
+          </div>
+          <div class="guide-row">
+            <span>القفز</span>
+            <kbd>Space</kbd>
+          </div>
+          <div class="guide-row">
+            <span>إعادة المرحلة</span>
+            <kbd>R</kbd>
+          </div>
+          <p class="guide-note">على الهاتف استخدم أزرار التحكم أسفل اللعبة.</p>
+        </div>
+
+        <div class="creator-credit">
+          <span>صُنع بشغف بواسطة</span>
+          <strong>M11 / Mr. Mohamed Hussain</strong>
+        </div>
+      </aside>
+
+      <section class="play-area">
+        <div class="level-toolbar">
+          <div class="level-title">
+            <span class="live-indicator"></span>
+            <div>
+              <strong>ساحة المغامرة</strong>
+              <small>استعد لاكتشاف المجهول</small>
+            </div>
+          </div>
+
+          <div class="toolbar-actions">
+            <button id="rs" class="small-action" type="button" title="إعادة المرحلة">
+              ↻ <span>إعادة</span>
+            </button>
+            <button id="nx" class="small-action" type="button" title="المرحلة التالية">
+              التالي ←
+            </button>
+          </div>
+        </div>
+
+        <div class="canvas-frame">
+          <div class="canvas-decoration decoration-one"></div>
+          <div class="canvas-decoration decoration-two"></div>
+
+          <canvas id="c" width="960" height="540" aria-label="ساحة لعبة YOUR OLD VERSION">
+            متصفحك لا يدعم تشغيل اللعبة.
+          </canvas>
+
+          <div class="canvas-bottom-bar">
+            <span><i class="mini-dot"></i> عالم حيّ ومتغير</span>
+            <span>YOUR OLD VERSION <b>◆</b></span>
+          </div>
+        </div>
+
+        <div class="mobile-controls" aria-label="أزرار التحكم باللمس">
+          <div class="movement-controls">
+            <button id="left" class="control-btn direction-btn" type="button" aria-label="يسار">
+              ◀
+            </button>
+            <button id="right" class="control-btn direction-btn" type="button" aria-label="يمين">
+              ▶
+            </button>
+          </div>
+
+          <button id="jump" class="control-btn jump-btn" type="button" aria-label="قفز">
+            <span>↑</span>
+            <small>قفز</small>
+          </button>
+        </div>
+
+        <div class="bottom-tips">
+          <div class="tip-item">
+            <span class="tip-symbol">👻</span>
+            <span><strong>نسختك الشبحية</strong><small>استفد من حركاتك السابقة</small></span>
+          </div>
+          <div class="tip-item">
+            <span class="tip-symbol">🔮</span>
+            <span><strong>اكتشف الأسرار</strong><small>كل زاوية قد تخفي مفاجأة</small></span>
+          </div>
+          <div class="tip-item">
+            <span class="tip-symbol">🏆</span>
+            <span><strong>تجاوز الفخاخ</strong><small>الوصول للباب هو هدفك</small></span>
+          </div>
+        </div>
+      </section>
+
+    </section>
+
+    <!-- شاشة البداية -->
+    <section id="o1" class="overlay show" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+      <div class="dialog-card start-dialog">
+        <div class="dialog-decoration"></div>
+
+        <div class="game-emblem">
+          <span class="emblem-orbit orbit-one"></span>
+          <span class="emblem-orbit orbit-two"></span>
+          <span class="emblem-symbol">👻</span>
+        </div>
+
+        <span class="eyebrow">رحلة خارج حدود الزمن</span>
+        <h1 id="startTitle">YOUR OLD<br><span>VERSION</span></h1>
+
+        <p class="dialog-description">
+          كل خطوة تترك أثرًا، وكل أثر قد ينقذك لاحقًا.
+          استخدم نسخك الشبحية لحل الألغاز وتجاوز الفخاخ.
+        </p>
+
+        <div class="character-section">
+          <h2>اختر مغامرك</h2>
+
+          <div id="chs" class="character-grid">
+            <button class="character-option selected" type="button" data-character="adam" aria-pressed="true">
+              <span class="character-avatar adam-avatar">🧑🏻‍🚀</span>
+              <strong>آدم</strong>
+              <small>مغامر لا يستسلم</small>
+              <span class="character-check">✓</span>
+            </button>
+
+            <button class="character-option" type="button" data-character="layan" aria-pressed="false">
+              <span class="character-avatar layan-avatar">👩🏻‍🚀</span>
+              <strong>ليان</strong>
+              <small>عقل يكتشف الأسرار</small>
+              <span class="character-check">✓</span>
+            </button>
+          </div>
+        </div>
+
+        <button id="go" class="primary-btn" type="button">
+          <span>ابدأ المغامرة</span>
+          <span class="button-arrow">←</span>
+        </button>
+
+        <div class="start-footer">
+          <span>٣ عوالم</span><i></i>
+          <span>ألغاز وفخاخ</span><i></i>
+          <span>أشباح من الماضي</span>
+        </div>
       </div>
     </section>
 
-    <section class="info-grid">
-      <article class="info-card">
-        <span class="info-icon">⟳</span>
-        <h2>الزمن يعيد نفسه</h2>
-        <p>تحركاتك السابقة تتحول إلى نسخ تساعدك في حل الألغاز.</p>
-      </article>
+    <!-- شاشة الفوز -->
+    <section id="o2" class="overlay" role="dialog" aria-modal="true" aria-labelledby="t2">
+      <div class="dialog-card result-dialog">
+        <div class="result-icon">🏆</div>
+        <span class="eyebrow">إنجاز جديد!</span>
+        <h2 id="t2">أحسنت أيها المغامر!</h2>
+        <p id="p2">لقد نجحت في تجاوز التحدي.</p>
 
-      <article class="info-card">
-        <span class="info-icon">◇</span>
-        <h2>فكّر قبل أن تتحرك</h2>
-        <p>استخدم الألواح لفتح الأبواب والوصول إلى بوابة النهاية.</p>
-      </article>
+        <div class="result-divider"></div>
 
-      <article class="info-card">
-        <span class="info-icon">✧</span>
-        <h2>ثلاثة عوالم</h2>
-        <p>استكشف الغابة المسحورة والآثار القديمة ومملكة الكريستال.</p>
-      </article>
+        <div class="result-actions">
+          <button id="winRestart" class="secondary-btn" type="button">↻ إعادة المرحلة</button>
+          <button id="n2" class="primary-btn" type="button">المرحلة التالية ←</button>
+        </div>
+      </div>
     </section>
 
-    <footer class="footer">
-      <span>YOUR OLD VERSION</span>
-      <span>Designed & Developed by M11 / Mr. Mohamed Hussain</span>
-      <span>© 2026 M11 Studio</span>
-    </footer>
   </main>
-
-  <!-- شاشة البداية -->
-  <section id="o1" class="overlay show">
-    <div class="dialog start-dialog">
-      <div class="dialog-symbol">◈</div>
-      <span class="eyebrow">A TIME-LOOP ADVENTURE</span>
-
-      <h2>YOUR OLD VERSION</h2>
-
-      <p class="dialog-description">
-        أنت مش لوحدك في الرحلة.<br>
-        نسختك القديمة ممكن تكون مفتاح نجاتك.
-      </p>
-
-      <div class="character-heading">اختر شخصيتك</div>
-
-      <div id="chs" class="character-select">
-        <button type="button" class="character-option selected"
-          data-character="adam" aria-pressed="true">
-          <span class="character-avatar adam-avatar">A</span>
-          <strong>آدم</strong>
-          <small>المغامر</small>
-        </button>
-
-        <button type="button" class="character-option"
-          data-character="layan" aria-pressed="false">
-          <span class="character-avatar layan-avatar">L</span>
-          <strong>ليان</strong>
-          <small>المستكشفة</small>
-        </button>
-      </div>
-
-      <button id="go" class="start-button" type="button">
-        ابدأ المغامرة <span>←</span>
-      </button>
-
-      <div class="dialog-credit">AN M11 ORIGINAL GAME</div>
-    </div>
-  </section>
-
-  <!-- شاشة الفوز -->
-  <section id="o2" class="overlay">
-    <div class="dialog win-dialog">
-      <div class="win-symbol">✦</div>
-      <span class="eyebrow">LEVEL COMPLETED</span>
-
-      <h2 id="t2">نجحت في المستوى!</h2>
-      <p id="p2">أحسنت! أكمل رحلتك.</p>
-
-      <button id="n2" class="start-button" type="button">
-        المستوى التالي
-      </button>
-
-      <button id="winRestart" class="text-button" type="button">
-        إعادة المستوى
-      </button>
-    </div>
-  </section>
 
   <script src="levels.js"></script>
   <script src="game.js"></script>
 
   <script>
     (() => {
-      const characterContainer = document.getElementById("chs");
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+      const soundToggle = document.getElementById("soundToggle");
+      const gameShell = document.querySelector(".game-shell");
 
-      characterContainer.addEventListener("click", event => {
-        const button = event.target.closest("[data-character]");
-        if (!button) return;
+      fullscreenBtn?.addEventListener("click", async () => {
+        try {
+          if (!document.fullscreenElement) {
+            await (gameShell.requestFullscreen?.() || document.documentElement.requestFullscreen?.());
+          } else {
+            await document.exitFullscreen();
+          }
+        } catch (error) {
+          console.log("Fullscreen is not available in this browser.");
+        }
+      });
 
-        const buttons = characterContainer.querySelectorAll(
-          "[data-character]"
-        );
+      document.addEventListener("fullscreenchange", () => {
+        fullscreenBtn.textContent = document.fullscreenElement ? "⤢" : "⛶";
+      });
 
-        buttons.forEach(item => {
-          const selected = item === button;
-          item.classList.toggle("selected", selected);
-          item.setAttribute("aria-pressed", String(selected));
+      soundToggle?.addEventListener("click", () => {
+        const muted = soundToggle.dataset.muted !== "true";
+        soundToggle.dataset.muted = String(muted);
+        soundToggle.classList.toggle("muted", muted);
+        soundToggle.textContent = muted ? "♪̸" : "♪";
+        soundToggle.setAttribute("aria-label", muted ? "الصوت مكتوم" : "الصوت");
+        window.gameMuted = muted;
+      });
+
+      const progressText = document.getElementById("progressText");
+      const progressFill = document.getElementById("fill");
+
+      function updateProgress() {
+        if (!progressFill || !progressText) return;
+        const raw = parseFloat(progressFill.style.width);
+        if (Number.isFinite(raw)) {
+          progressText.textContent = Math.round(Math.max(0, Math.min(100, raw))) + "%";
+        }
+      }
+
+      const observer = new MutationObserver(updateProgress);
+      if (progressFill) {
+        observer.observe(progressFill, {
+          attributes: true,
+          attributeFilter: ["style"]
         });
+      }
+      updateProgress();
 
-        const index = button.dataset.character === "layan" ? 1 : 0;
-
-        if (window.YOUR_OLD_VERSION) {
-          window.YOUR_OLD_VERSION.chooseCharacter(index);
-        }
+      // اختيار الشخصية مع إبراز الشخصية المختارة.
+      document.querySelectorAll("[data-character]").forEach(button => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("[data-character]").forEach(item => {
+            const selected = item === button;
+            item.classList.toggle("selected", selected);
+            item.setAttribute("aria-pressed", String(selected));
+          });
+        });
       });
 
-      document.getElementById("winRestart").addEventListener("click", () => {
-        document.getElementById("o2").classList.remove("show");
+      // ملاءمة عرض اللعبة لشاشة الهاتف عند تدوير الجهاز.
+      function updateOrientationHint() {
+        document.documentElement.style.setProperty(
+          "--screen-height",
+          window.innerHeight + "px"
+        );
+      }
 
-        if (window.YOUR_OLD_VERSION) {
-          window.YOUR_OLD_VERSION.restart();
-        }
-      });
+      window.addEventListener("resize", updateOrientationHint);
+      updateOrientationHint();
     })();
   </script>
 </body>
