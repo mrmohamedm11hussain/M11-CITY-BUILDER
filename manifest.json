@@ -1,0 +1,18 @@
+{
+"id": "./",
+"name": "نسختك القديمة - مغامرة أنطونيو مايكل",
+"short_name": "نسختك القديمة",
+"description": "مغامرة عربية بين أسرار مصر القديمة.",
+"lang": "ar",
+"dir": "rtl",
+"start_url": "./",
+"scope": "./",
+"display": "fullscreen",
+"orientation": "landscape",
+"background_color": "#101b25",
+"theme_color": "#101b25",
+"categories": [
+"games",
+"adventure"
+]
+}
