@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YOUR OLD VERSION — مغامرة الأطلال والظلال</title>
+    <title>نسختك القديمة — مغامرة أنتوني مايكل</title>
     <style>
         :root {
             --bg-dark: #020408;
             --accent-cyan: #00f3ff;
             --accent-purple: #9d4edd;
             --accent-crimson: #ff3366;
+            --accent-gold: #ffb703;
             --text-main: #f8f9fa;
-            --panel-bg: rgba(6, 10, 18, 0.92);
+            --panel-bg: rgba(6, 10, 18, 0.94);
         }
 
         * {
@@ -30,6 +31,74 @@
             color: var(--text-main);
         }
 
+        /* Loading & Intro Cinematic Screen */
+        #introScreen {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #0a1128 0%, #020408 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            transition: opacity 1s ease;
+        }
+
+        #introScreen h1 {
+            font-size: 2.8rem;
+            letter-spacing: 3px;
+            color: #fff;
+            text-shadow: 0 0 20px var(--accent-cyan);
+            margin-bottom: 10px;
+        }
+
+        #introScreen p {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        .loading-bar-container {
+            width: 350px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            margin-bottom: 25px;
+        }
+
+        .loading-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 12px var(--accent-cyan);
+            transition: width 0.3s ease;
+        }
+
+        .start-btn {
+            background: transparent;
+            border: 2px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 12px 35px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+            transition: 0.3s;
+            display: none;
+        }
+
+        .start-btn:hover {
+            background: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 25px var(--accent-cyan);
+        }
+
+        /* Main Game Canvas & UI */
         #gameCanvas {
             position: absolute;
             top: 0;
@@ -39,7 +108,7 @@
             z-index: 1;
         }
 
-        .ui-layer {
+        .game-ui {
             position: relative;
             z-index: 2;
             width: 100%;
@@ -50,6 +119,8 @@
             align-items: center;
             padding: 15px;
             pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s ease;
         }
 
         header, .hud-panel, .bottom-control, .dialogue-box {
@@ -58,7 +129,7 @@
 
         header {
             text-align: center;
-            background: rgba(4, 7, 14, 0.8);
+            background: rgba(4, 7, 14, 0.85);
             padding: 6px 20px;
             border-radius: 10px;
             border: 1px solid rgba(0, 243, 255, 0.2);
@@ -66,34 +137,33 @@
         }
 
         header h1 {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             letter-spacing: 2px;
-            text-transform: uppercase;
             color: #fff;
             text-shadow: 0 0 10px var(--accent-cyan);
         }
 
         header p {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #94a3b8;
         }
 
         /* Stats HUD */
         .hud-panel {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             background: var(--panel-bg);
             padding: 8px 18px;
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             box-shadow: 0 5px 20px rgba(0,0,0,0.8);
         }
 
-        /* Cinematic Shadow Dialogue Box (Bottom) */
+        /* Cinematic Shadow Dialogue Box (Call of Duty Style at Bottom) */
         .dialogue-container {
             width: 100%;
-            max-width: 850px;
+            max-width: 900px;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -102,14 +172,14 @@
 
         .dialogue-box {
             background: rgba(12, 4, 20, 0.95);
-            border: 1px solid rgba(157, 78, 221, 0.5);
+            border: 1px solid rgba(157, 78, 221, 0.6);
             border-right: 4px solid var(--accent-purple);
             padding: 12px 18px;
             border-radius: 10px;
             display: flex;
             align-items: center;
             gap: 15px;
-            box-shadow: 0 0 25px rgba(157, 78, 221, 0.25);
+            box-shadow: 0 0 25px rgba(157, 78, 221, 0.3);
         }
 
         .shadow-avatar {
@@ -123,18 +193,17 @@
         }
 
         .dialogue-text {
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             color: #e2e8f0;
             line-height: 1.4;
         }
 
-        /* Action and Controls Bar */
         .bottom-control {
             display: flex;
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            max-width: 850px;
+            max-width: 900px;
             background: var(--panel-bg);
             padding: 10px 18px;
             border-radius: 12px;
@@ -145,7 +214,7 @@
             background: rgba(0, 243, 255, 0.1);
             border: 1px solid var(--accent-cyan);
             color: #fff;
-            padding: 8px 16px;
+            padding: 7px 15px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.8rem;
@@ -168,11 +237,11 @@
             box-shadow: 0 0 12px var(--accent-crimson);
         }
 
-        /* Mobile Touch Buttons */
+        /* Mobile Touch Pad */
         .touch-pad {
             display: none;
             position: absolute;
-            bottom: 120px;
+            bottom: 125px;
             left: 20px;
             right: 20px;
             justify-content: space-between;
@@ -218,18 +287,33 @@
 </head>
 <body>
 
+    <!-- Cinematic Loading & Intro Screen -->
+    <div id="introScreen">
+        <h1>نسختك القديمة</h1>
+        <p>رحلة المستكشف أنتوني مايكل بين عوالم الظلام والفضائيات</p>
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loadingBar"></div>
+        </div>
+        <p id="loadingStatus" style="font-size: 0.85rem; color: var(--accent-cyan); margin-bottom: 15px;">جاري تحميل موارد العوالم والوحوش...</p>
+        <button class="start-btn" id="startBtn" onclick="startGameCinematic()">ابدأ الرحلة الآن</button>
+        <div style="position: absolute; bottom: 20px; font-size: 0.75rem; color: #64748b;">
+            M11 Development © 2026 — Mr. Mohamed Hussain
+        </div>
+    </div>
+
     <canvas id="gameCanvas"></canvas>
 
-    <div class="ui-layer">
+    <div class="game-ui" id="gameUI">
         <header>
-            <h1>YOUR OLD VERSION</h1>
-            <p>M11 Development — أسرار الأطلال والظلال</p>
+            <h1>نسختك القديمة — أنتوني مايكل</h1>
+            <p>M11 Development — نظام العوالم والبوابات المتعددة</p>
         </header>
 
         <div class="hud-panel">
             <div>❤️ الصحة: <span id="hpVal" style="color: #ff3366;">100</span></div>
-            <div>🏛️ البوابة / العالم: <span id="worldVal" style="color: var(--accent-cyan);">أطلال المعبد (1)</span></div>
-            <div>🔑 المفاتيح: <span id="keyVal" style="color: #ffb703;">0 / 3</span></div>
+            <div>🌌 العالم / المستوى: <span id="worldVal" style="color: var(--accent-cyan);">العالم 1: الأطلال القديمة</span></div>
+            <div>⚔️ السلاح والموارد: <span id="weaponVal" style="color: #ffb703;">سيف أثري + كشاف</span></div>
+            <div>🔑 المفاتيح: <span id="keyVal" style="color: #00f3ff;">0 / 3</span></div>
         </div>
 
         <div class="touch-pad">
@@ -239,24 +323,24 @@
             </div>
             <div style="display: flex; gap: 10px;">
                 <button class="touch-btn" ontouchstart="jumpPlayer()">⬆️</button>
-                <button class="touch-btn btn-danger" ontouchstart="interactGate()">🚪</button>
+                <button class="touch-btn btn-danger" ontouchstart="attackEnemy()">⚔️</button>
             </div>
         </div>
 
         <div class="dialogue-container">
-            <!-- Shadow Dialogue Box -->
+            <!-- Shadow Dialogue Box (Call of Duty Style) -->
             <div class="dialogue-box">
                 <div class="shadow-avatar">👤</div>
                 <div class="dialogue-text">
-                    <strong style="color: var(--accent-purple);">الظل المرافق:</strong> 
-                    <span id="shadowSpeech">"انتبه يا محمد.. الأطلال هنا مظلمة والوحوش تتربص قرب البوابة الحجرية القديمة. اجمع المفاتيح وافتح البوابة للانتقال للعالم التالي!"</span>
+                    <strong style="color: var(--accent-purple);">الظل (نسختك القديمة):</strong> 
+                    <span id="shadowSpeech">"أهلاً يا أنتوني.. أنا ظلك القديم الذي يرافقك في هذه الحفرة الملعونة. اجمع المفاتيح وتجاوز الوحوش لنصل للبوابة التالية."</span>
                 </div>
             </div>
 
             <!-- Bottom Action Controls -->
             <div class="bottom-control">
-                <button class="btn" onclick="nextWorld()">🚪 عبور البوابة التالية</button>
-                <span style="font-size: 0.75rem; color: #64748b;">استخدم (A/D أو الأسهم للحركة، W للقفز)</span>
+                <button class="btn" onclick="nextWorldPortal()">🚪 عبور البوابة الكبرى</button>
+                <span style="font-size: 0.75rem; color: #64748b;">(الحركة: A/D أو الأسهم | القفز: W | الهجوم: Space)</span>
                 <button class="btn btn-danger" onclick="restartGame()">إعادة المحاولة</button>
             </div>
         </div>
@@ -265,10 +349,33 @@
     <div class="portrait-alert">
         <div style="font-size: 3rem; margin-bottom: 10px;">📱↻</div>
         <h2>اقلب الموبايل بالعرض</h2>
-        <p style="color: #a0aec0; margin-top: 5px;">لتعيش أجواء ألعاب الاستكشاف والرعب الحقيقية</p>
+        <p style="color: #a0aec0; margin-top: 5px;">لتعيش ملحمة ألعاب الاستكشاف والرعب الحقيقية</p>
     </div>
 
     <script>
+        // Loading Simulator Script
+        let loadProgress = 0;
+        const loadInterval = setInterval(() => {
+            loadProgress += Math.floor(Math.random() * 15) + 5;
+            if (loadProgress >= 100) {
+                loadProgress = 100;
+                clearInterval(loadInterval);
+                document.getElementById('loadingStatus').innerText = "تم تحميل العوالم والوحوش بنجاح!";
+                document.getElementById('startBtn').style.display = "block";
+            }
+            document.getElementById('loadingBar').style.width = loadProgress + '%';
+        }, 200);
+
+        function startGameCinematic() {
+            const intro = document.getElementById('introScreen');
+            intro.style.opacity = '0';
+            setTimeout(() => {
+                intro.style.display = 'none';
+                document.getElementById('gameUI').style.opacity = '1';
+            }, 1000);
+        }
+
+        // Game Engine
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -279,180 +386,197 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Game State
-        let player = {
+        let anthony = {
             x: 120,
             y: canvas.height - 180,
-            width: 32,
-            height: 52,
+            width: 34,
+            height: 54,
             vx: 0,
             vy: 0,
-            speed: 4,
+            speed: 4.5,
             isJumping: false,
             hp: 100,
             keys: 0
         };
 
-        let currentWorld = 1;
-        const worldData = [
-            { id: 1, name: "أطلال المعبد القديم", bg: "#04070e", shadowText: "هذا هو المدخل.. انتبه من الفخاخ الأرضية واجمع المفاتيح المنقوشة على الجدران." },
-            { id: 2, name: "سراديب الموتى المعتمة", bg: "#0d0414", shadowText: "الأجواء هنا تزداد ظلمة.. مسوخ الظل تقترب منك، لا تتوقف في مكان واحد." },
-            { id: 3, name: "قاعة البوابات الزمنية", bg: "#140306", shadowText: "نحن يقظون أمام البوابة الكبرى.. النسخة القديمة تراقب كل خطوة تخطوها هنا." }
+        let currentWorldIndex = 0;
+        const worldsData = [
+            { id: 1, name: "العالم 1: الأطلال القديمة والمعابد", bg: "#04070e", weapon: "سيف أثري + كشاف", shadowMsg: "هذا هو الطابق الأول.. احذر الفخاخ الأرضية واجمع المفاتيح الثلاثة المنقوشة." },
+            { id: 2, name: "العالم 2: كوكب الفضائيات والمختبرات", bg: "#0d041c", weapon: "بندقية بلازما ليزر", shadowMsg: "لقد عبرت البوابة! نحن الآن في العالم الفضائي.. الوحوش هنا متطورة تطلق طاقة قاتلة." },
+            { id: 3, name: "العالم 3: سراديب الرعب والعفاريت", bg: "#1a0306", weapon: "سيف الظلال المشتعل", shadowMsg: "أعماق الرعب الأخير.. عفاريت الظلام تتربص بنا، واجههم لتصل لنهاية نسختك القديمة!" }
         ];
 
         let monsters = [];
-        let keysList = [];
-        let shadowPos = { x: 80, y: 150 };
+        let itemsKeys = [];
+        let shadowPos = { x: 70, y: 150 };
 
-        function initLevel() {
+        function initLevelEntities() {
             monsters = [];
-            keysList = [];
-            // Spawn Monsters
-            for (let i = 0; i < currentWorld + 1; i++) {
+            itemsKeys = [];
+            let currentW = worldsData[currentWorldIndex];
+            
+            // Spawn Monsters based on world
+            for (let i = 0; i < 3 + currentWorldIndex; i++) {
                 monsters.push({
-                    x: 400 + i * 250,
+                    x: 450 + i * 220,
                     y: canvas.height - 150,
                     width: 35,
                     height: 45,
                     dir: 1,
-                    speed: 1.5 + currentWorld * 0.4
+                    speed: 1.5 + currentWorldIndex * 0.6
                 });
             }
+
             // Spawn Keys
             for (let i = 0; i < 3; i++) {
-                keysList.push({
-                    x: 250 + i * 220,
-                    y: canvas.height - 210 - (i * 20),
+                itemsKeys.push({
+                    x: 280 + i * 240,
+                    y: canvas.height - 210 - (i * 15),
                     collected: false
                 });
             }
         }
-        initLevel();
+        initLevelEntities();
 
         // Keyboard Controls
-        let keys = {};
-        window.addEventListener('keydown', e => { keys[e.key] = true; });
-        window.addEventListener('keyup', e => { keys[e.key] = false; });
+        let inputKeys = {};
+        window.addEventListener('keydown', e => { 
+            inputKeys[e.key] = true; 
+            if (e.key === ' ' || e.key === 'Spacebar') {
+                attackEnemy();
+            }
+        });
+        window.addEventListener('keyup', e => { inputKeys[e.key] = false; });
 
-        function movePlayer(dir) { player.vx = dir * player.speed; }
-        function stopPlayer() { player.vx = 0; }
+        function movePlayer(dir) { anthony.vx = dir * anthony.speed; }
+        function stopPlayer() { anthony.vx = 0; }
         function jumpPlayer() {
-            if (!player.isJumping) {
-                player.vy = -12;
-                player.isJumping = true;
+            if (!anthony.isJumping) {
+                anthony.vy = -12.5;
+                anthony.isJumping = true;
             }
         }
 
-        function nextWorld() {
-            if (player.keys < 3) {
-                document.getElementById('shadowSpeech').innerText = `"البوابة مغلقة بشفرة حجرية! يجب أن تجمع الـ 3 مفاتيح أولاً لتتمكن من العبور."`;
+        function attackEnemy() {
+            // Check if monster is near to attack with weapon
+            monsters.forEach((m, index) => {
+                if (Math.abs(anthony.x - m.x) < 70) {
+                    monsters.splice(index, 1); // Defeat monster
+                    document.getElementById('shadowSpeech').innerText = `"ضربة موفقة يا أنتوني! لقد قضيت على أحد وحوش هذا الطابق."`;
+                }
+            });
+        }
+
+        function nextWorldPortal() {
+            if (anthony.keys < 3) {
+                document.getElementById('shadowSpeech').innerText = `"البوابة مغلقة! لم تجمّع المفاتيح الثلاثة المطلوبة لفتح باب العالم التالي."`;
                 return;
             }
-            currentWorld = currentWorld < 3 ? currentWorld + 1 : 1;
-            player.keys = 0;
-            const w = worldData[currentWorld - 1];
-            document.getElementById('worldVal').innerText = `${w.name} (${currentWorld})`;
-            document.getElementById('shadowSpeech').innerText = `"${w.shadowText}"`;
-            document.getElementById('keyVal').innerText = `${player.keys} / 3`;
-            initLevel();
+            currentWorldIndex = (currentWorldIndex + 1) % worldsData.length;
+            anthony.keys = 0;
+            let w = worldsData[currentWorldIndex];
+            
+            document.getElementById('worldVal').innerText = w.name;
+            document.getElementById('weaponVal').innerText = w.weapon;
+            document.getElementById('keyVal').innerText = `${anthony.keys} / 3`;
+            document.getElementById('shadowSpeech').innerText = `"${w.shadowMsg}"`;
+            initLevelEntities();
         }
 
         function restartGame() {
-            player.hp = 100;
-            player.keys = 0;
-            player.x = 120;
-            document.getElementById('hpVal').innerText = player.hp;
-            document.getElementById('keyVal').innerText = `${player.keys} / 3`;
-            initLevel();
+            anthony.hp = 100;
+            anthony.keys = 0;
+            anthony.x = 120;
+            document.getElementById('hpVal').innerText = anthony.hp;
+            document.getElementById('keyVal').innerText = `${anthony.keys} / 3`;
+            initLevelEntities();
         }
 
         // Engine Loop
-        function update() {
-            // Movement
-            if (keys['ArrowRight'] || keys['d'] || keys['D']) player.vx = player.speed;
-            else if (keys['ArrowLeft'] || keys['a'] || keys['A']) player.vx = -player.speed;
-            else player.vx *= 0.75;
+        function updateGame() {
+            if (inputKeys['ArrowRight'] || inputKeys['d'] || inputKeys['D']) anthony.vx = anthony.speed;
+            else if (inputKeys['ArrowLeft'] || inputKeys['a'] || inputKeys['A']) anthony.vx = -anthony.speed;
+            else anthony.vx *= 0.75;
 
-            if ((keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' ']) && !player.isJumping) {
-                player.vy = -12;
-                player.isJumping = true;
+            if ((inputKeys['ArrowUp'] || inputKeys['w'] || inputKeys['W'] || inputKeys[' ']) && !anthony.isJumping) {
+                anthony.vy = -12.5;
+                anthony.isJumping = true;
             }
 
-            player.x += player.vx;
-            player.vy += 0.55; // Gravity
-            player.y += player.vy;
+            anthony.x += anthony.vx;
+            anthony.vy += 0.55; // Gravity
+            anthony.y += anthony.vy;
 
-            const floor = canvas.height - 130;
-            if (player.y > floor) {
-                player.y = floor;
-                player.vy = 0;
-                player.isJumping = false;
+            const groundY = canvas.height - 130;
+            if (anthony.y > groundY) {
+                anthony.y = groundY;
+                anthony.vy = 0;
+                anthony.isJumping = false;
             }
 
-            if (player.x < 20) player.x = 20;
-            if (player.x > canvas.width - 50) player.x = canvas.width - 50;
+            if (anthony.x < 20) anthony.x = 20;
+            if (anthony.x > canvas.width - 50) anthony.x = canvas.width - 50;
 
-            // Shadow Follows Player
-            shadowPos.x += ((player.x - 45) - shadowPos.x) * 0.1;
-            shadowPos.y += ((player.y - 20) - shadowPos.y) * 0.1;
+            // Shadow Follows Anthony smoothly
+            shadowPos.x += ((anthony.x - 45) - shadowPos.x) * 0.1;
+            shadowPos.y += ((anthony.y - 20) - shadowPos.y) * 0.1;
 
             // Keys Collection
-            keysList.forEach(k => {
-                if (!k.collected && Math.hypot(player.x - k.x, player.y - k.y) < 35) {
+            itemsKeys.forEach(k => {
+                if (!k.collected && Math.hypot(anthony.x - k.x, anthony.y - k.y) < 35) {
                     k.collected = true;
-                    player.keys++;
-                    document.getElementById('keyVal').innerText = `${player.keys} / 3`;
-                    if (player.keys === 3) {
-                        document.getElementById('shadowSpeech').innerText = `"ممتاز! لقد جمعت المفاتيح الثلاثة. الآن توجه نحو البوابة الحجرية الكبرى واضغط على عبور!"`;
+                    anthony.keys++;
+                    document.getElementById('keyVal').innerText = `${anthony.keys} / 3`;
+                    if (anthony.keys === 3) {
+                        document.getElementById('shadowSpeech').innerText = `"رائع يا أنتوني! جمعت المفاتيح الثلاثة. توجه فوراً نحو البوابة الكبرى واضغط عبور."`;
                     }
                 }
             });
 
-            // Monsters AI & Collision
+            // Monsters Movement & Damage
             monsters.forEach(m => {
                 m.x += m.dir * m.speed;
                 if (m.x < 200 || m.x > canvas.width - 200) m.dir *= -1;
 
-                if (Math.abs(player.x - m.x) < 25 && Math.abs(player.y - m.y) < 35) {
-                    player.hp -= 0.6;
-                    if (player.hp < 0) player.hp = 0;
-                    document.getElementById('hpVal').innerText = Math.floor(player.hp);
+                if (Math.abs(anthony.x - m.x) < 28 && Math.abs(anthony.y - m.y) < 35) {
+                    anthony.hp -= 0.6;
+                    if (anthony.hp < 0) anthony.hp = 0;
+                    document.getElementById('hpVal').innerText = Math.floor(anthony.hp);
                 }
             });
         }
 
-        function draw() {
-            const w = worldData[currentWorld - 1];
+        function drawGame() {
+            let w = worldsData[currentWorldIndex];
             ctx.fillStyle = w.bg;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Ancient Temple Background Ruins & Giant Stone Door (Inspired by user image)
-            ctx.fillStyle = '#0a0f1d';
-            ctx.fillRect(canvas.width / 2 - 120, canvas.height - 380, 240, 250);
+            // Draw Giant Portal / Temple Structure in Background
+            ctx.fillStyle = '#080d1a';
+            ctx.fillRect(canvas.width / 2 - 130, canvas.height - 400, 260, 270);
             
-            // Giant Stone Circular Door
             ctx.strokeStyle = '#1e293b';
             ctx.lineWidth = 8;
             ctx.beginPath();
-            ctx.arc(canvas.width / 2, canvas.height - 255, 75, 0, Math.PI * 2);
+            ctx.arc(canvas.width / 2, canvas.height - 265, 80, 0, Math.PI * 2);
             ctx.stroke();
 
-            // God Rays (Light from above like reference image)
+            // God Rays lighting effect
             let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            grad.addColorStop(0, 'rgba(0, 243, 255, 0.07)');
+            grad.addColorStop(0, 'rgba(0, 243, 255, 0.08)');
             grad.addColorStop(1, 'transparent');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Ground Floor
-            const floor = canvas.height - 130;
-            ctx.fillStyle = '#070b14';
-            ctx.fillRect(0, floor + 40, canvas.width, 100);
-            ctx.fillStyle = varColor('--accent-cyan');
-            ctx.fillRect(0, floor + 40, canvas.width, 3);
+            const groundY = canvas.height - 130;
+            ctx.fillStyle = '#060a12';
+            ctx.fillRect(0, groundY + 40, canvas.width, 100);
+            ctx.fillStyle = '#00f3ff';
+            ctx.fillRect(0, groundY + 40, canvas.width, 3);
 
             // Draw Keys
-            keysList.forEach(k => {
+            itemsKeys.forEach(k => {
                 if (!k.collected) {
                     ctx.fillStyle = '#ffb703';
                     ctx.shadowColor = '#ffb703';
@@ -466,22 +590,22 @@
 
             // Draw Monsters
             monsters.forEach(m => {
-                ctx.fillStyle = '#ff3366';
-                ctx.shadowColor = '#ff3366';
+                ctx.fillStyle = currentWorldIndex === 1 ? '#00ffcc' : (currentWorldIndex === 2 ? '#ff3366' : '#9d4edd');
+                ctx.shadowColor = ctx.fillStyle;
                 ctx.shadowBlur = 12;
                 ctx.fillRect(m.x, m.y + 7, m.width, m.height);
                 ctx.shadowBlur = 0;
             });
 
-            // Draw Player (Explorer)
+            // Draw Anthony Michael (Player)
             ctx.fillStyle = '#00f3ff';
             ctx.shadowColor = '#00f3ff';
             ctx.shadowBlur = 15;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillRect(anthony.x, anthony.y, anthony.width, anthony.height);
             ctx.shadowBlur = 0;
 
-            // Draw Shadow Companion
-            ctx.fillStyle = 'rgba(157, 78, 221, 0.8)';
+            // Draw Shadow Companion ("Your Old Version")
+            ctx.fillStyle = 'rgba(157, 78, 221, 0.85)';
             ctx.shadowColor = '#9d4edd';
             ctx.shadowBlur = 15;
             ctx.beginPath();
@@ -490,16 +614,12 @@
             ctx.shadowBlur = 0;
         }
 
-        function varColor(name) {
-            return getComputedStyle(document.documentElement).getPropertyValue(name);
+        function mainLoop() {
+            updateGame();
+            drawGame();
+            requestAnimationFrame(mainLoop);
         }
-
-        function loop() {
-            update();
-            draw();
-            requestAnimationFrame(loop);
-        }
-        loop();
+        mainLoop();
     </script>
 </body>
-</html> 
+    </html> 
